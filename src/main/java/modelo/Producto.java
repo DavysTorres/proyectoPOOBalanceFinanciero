@@ -7,8 +7,10 @@ import java.math.RoundingMode;
 
 
 
+/** Entidad del modelo: encapsula sus datos sin depender de vistas, servicios ni DAO. */
 public class Producto {
 
+    // Estado privado; los setters final conservan las validaciones al construir subclases.
     private int id;
     private String nombre;
     private BigDecimal precioVenta;
@@ -18,11 +20,13 @@ public class Producto {
     private boolean activo;
 
     // Constructor vacío
+    // Construye el objeto e inicializa sus atributos con las validaciones disponibles.
     public Producto() {
         this.activo = true;
     }
 
     // Constructor completo con validaciones
+    // Construye el objeto e inicializa sus atributos con las validaciones disponibles.
     public Producto(int id, String nombre, BigDecimal precioVenta, BigDecimal costoCompra, int stock, int stockMinimo) {
         setId(id);
         setNombre(nombre);
@@ -33,70 +37,84 @@ public class Producto {
         this.activo = true;
     }
 
+    // Consulta el identificador; cero representa una entidad aun no guardada.
     public int getId() {
         return id;
     }
-    public void setId(int id) {
+    // Valida y asigna el identificador sin permitir valores negativos.
+    public final void setId(int id) {
         if (id < 0) {
             throw new IllegalArgumentException("El id del producto no puede ser negativo");
         }
         this.id = id;
     }
 
+    // Consulta el nombre del producto.
     public String getNombre() {
         return nombre;
     }
-    public void setNombre(String nombre) {
+    // Rechaza nombres ausentes y elimina espacios exteriores.
+    public final void setNombre(String nombre) {
         if (nombre == null ||  nombre.trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre es obligatorio");
         }
         this.nombre = nombre.trim();
     }
 
+    // Consulta el precio de venta actual del producto.
     public BigDecimal getPrecioVenta() {
         return precioVenta;
     }
-    public void setPrecioVenta(BigDecimal precioVenta) {
+    // Valida que el precio de venta sea obligatorio y positivo.
+    public final void setPrecioVenta(BigDecimal precioVenta) {
         if (precioVenta == null || precioVenta.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("El precio de venta debe ser mayor que cero");
         }
         this.precioVenta = precioVenta;
     }
 
+    // Consulta el costo actual de una unidad del producto.
     public BigDecimal getCostoCompra() {
         return costoCompra;
     }
-    public void setCostoCompra(BigDecimal costoCompra) {
+    // Rechaza costos nulos, negativos o iguales a cero.
+    public final void setCostoCompra(BigDecimal costoCompra) {
         if (costoCompra == null || costoCompra.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("El costo debe ser mayor que cero");
         }
         this.costoCompra = costoCompra;
     }
 
+    // Consulta las unidades disponibles del inventario.
     public int getStock() {
         return stock;
     }
-    public void setStock(int stock) {
+    // Evita establecer existencias negativas.
+    public final void setStock(int stock) {
         if (stock < 0) {
             throw new IllegalArgumentException("El stock no puede ser negativo");
         }
         this.stock = stock;
     }
 
+    // Consulta el limite utilizado para las alertas de inventario.
     public int getStockMinimo() {
         return stockMinimo;
     }
-    public void setStockMinimo(int stockMinimo) {
+    // El limite de stock puede ser cero, pero nunca negativo.
+    public final void setStockMinimo(int stockMinimo) {
         if (stockMinimo < 0) {
             throw new IllegalArgumentException("El stock minimo no puede ser negativo");
         }
         this.stockMinimo = stockMinimo;
     }
 
+    // Consulta si el producto esta disponible para nuevas operaciones.
     public boolean isActivo() {
         return activo;
     }
-    public void setActivo(boolean activo) {
+    // Permite la baja logica del producto sin borrar su historial.
+    public final void setActivo(boolean activo) {
         this.activo = activo;
     }
 

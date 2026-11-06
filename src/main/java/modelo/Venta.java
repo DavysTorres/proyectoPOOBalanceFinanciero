@@ -7,14 +7,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
  
+/** Entidad del modelo: encapsula sus datos sin depender de vistas, servicios ni DAO. */
 public class Venta {
  
+    // Estado privado; los setters final conservan las validaciones al construir subclases.
     private int id;
     private Usuario cajero;
     private LocalDateTime fechaHora;
     private BigDecimal total;
     private final List<DetalleVenta> detalles;
  
+    // Construye el objeto e inicializa sus atributos con las validaciones disponibles.
     public Venta(Usuario cajero) {
         setCajero(cajero);
         this.fechaHora = LocalDateTime.now();
@@ -22,11 +25,13 @@ public class Venta {
         this.detalles = new ArrayList<>();
     }
  
+    // Consulta el identificador; cero representa una entidad aun no guardada.
     public int getId() {
         return id;
     }
  
-    public void setId(int id) {
+    // Valida y asigna el identificador sin permitir valores negativos.
+    public final void setId(int id) {
         if (id < 0) {
             throw new IllegalArgumentException(
                     "El id no puede ser negativo.");
@@ -34,32 +39,39 @@ public class Venta {
         this.id = id;
     }
  
+    // Consulta al usuario responsable de la venta.
     public Usuario getCajero() {
         return cajero;
     }
  
-    public void setCajero(Usuario cajero) {
+    // Exige un usuario asociado; validar sus permisos corresponde al servicio.
+    public final void setCajero(Usuario cajero) {
         this.cajero = Objects.requireNonNull(
                 cajero, "El cajero es obligatorio.");
     }
  
+    // Consulta la fecha y hora de registro de la operacion.
     public LocalDateTime getFechaHora() {
         return fechaHora;
     }
  
-    public void setFechaHora(LocalDateTime fechaHora) {
+    // Evita operaciones sin fecha y hora de registro.
+    public final void setFechaHora(LocalDateTime fechaHora) {
         this.fechaHora = Objects.requireNonNull(
                 fechaHora, "La fecha es obligatoria.");
     }
  
+    // Recalcula el total para reflejar las cantidades actuales de los detalles.
     public BigDecimal getTotal() {
         return calcularTotal();
     }
  
+    // Expone una lista que impide agregar o quitar lineas desde el exterior.
     public List<DetalleVenta> getDetalles() {
         return Collections.unmodifiableList(detalles);
     }
  
+    // Agrega una linea validada; confirmar y mover inventario corresponde al servicio.
     public void agregarDetalle(Producto p, int cantidad) {
         Objects.requireNonNull(p, "El producto es obligatorio.");
  
@@ -84,6 +96,7 @@ public class Venta {
         calcularTotal();
     }
  
+    // Retira una linea del carrito y actualiza su total sin mover inventario.
     public void quitarDetalle(Producto p) {
         Objects.requireNonNull(p, "El producto es obligatorio.");
  
@@ -95,6 +108,7 @@ public class Venta {
         }
     }
  
+    // Reduce una unidad o elimina la linea cuando solo queda una.
     public void reducirCantidad(Producto p) {
         Objects.requireNonNull(p, "El producto es obligatorio.");
  
@@ -113,6 +127,7 @@ public class Venta {
         calcularTotal();
     }
  
+    // Recorre los detalles y suma sus subtotales con BigDecimal.
     public BigDecimal calcularTotal() {
         BigDecimal suma = BigDecimal.ZERO;
  
@@ -124,6 +139,7 @@ public class Venta {
         return total;
     }
  
+    // Suma los costos historicos de lo vendido, no el valor de las compras.
     public BigDecimal calcularCostoTotal() {
         BigDecimal suma = BigDecimal.ZERO;
  
@@ -134,10 +150,12 @@ public class Venta {
         return suma;
     }
  
+    // Informa si el carrito carece de detalles.
     public boolean estaVacia() {
         return detalles.isEmpty();
     }
  
+    // Busca por id persistido o por identidad si el producto todavia es nuevo.
     private DetalleVenta buscarDetalle(Producto producto) {
         for (DetalleVenta detalle : detalles) {
             Producto actual = detalle.getProducto();
@@ -146,7 +164,7 @@ public class Venta {
             // Si aún no tienen id, compara la misma instancia.
             if (actual == producto
                     || (producto.getId() > 0
-&& actual.getId() == producto.getId())) {
+                    && actual.getId() == producto.getId())) {
                 return detalle;
             }
         }
