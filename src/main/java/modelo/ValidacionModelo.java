@@ -2,10 +2,13 @@ package modelo;
 
 import java.math.BigDecimal;
 
-/** Reglas compartidas, visibles solo dentro del paquete y basadas en Java estandar. */
+/**
+ * Reglas compartidas, visibles solo dentro del paquete y basadas en Java estandar.
+ */
 final class ValidacionModelo {
     // No hay estado ni instancias de este auxiliar.
-    private ValidacionModelo() { }
+    private ValidacionModelo() {
+    }
 
     // Cero representa entidades nuevas y los valores negativos se rechazan.
     static int id(int valor) {

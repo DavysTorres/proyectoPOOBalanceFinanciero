@@ -4,7 +4,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 
-/** Un gasto mensual que se distribuye entre los dias de operacion. */
+/**
+ * Un gasto mensual que se distribuye entre los dias de operacion.
+ */
 public class GastoFijo extends Gasto {
     // Se almacena el divisor porque calcularMontoDiario no recibe parametros en la guia.
     private int diasOperacion;
@@ -17,7 +19,10 @@ public class GastoFijo extends Gasto {
     }
 
     // Impide divisiones entre cero o meses con mas de 31 dias.
-    public int getDiasOperacion() { return diasOperacion; }
+    public int getDiasOperacion() {
+        return diasOperacion;
+    }
+
     public final void setDiasOperacion(int diasOperacion) {
         this.diasOperacion = ValidacionModelo.dias(diasOperacion);
     }

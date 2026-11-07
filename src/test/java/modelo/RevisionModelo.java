@@ -1,6 +1,7 @@
 package modelo;
 
 import excepciones.StockInsuficienteException;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -9,12 +10,16 @@ import java.time.LocalTime;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
-/** Pruebas de consola sin dependencias externas. No requieren MySQL ni ventanas. */
+/**
+ * Pruebas de consola sin dependencias externas. No requieren MySQL ni ventanas.
+ */
 public class RevisionModelo {
     private static int correctas;
     private static int fallidas;
 
-    private interface Caso { void ejecutar() throws Exception; }
+    private interface Caso {
+        void ejecutar() throws Exception;
+    }
 
     private static void probar(String nombre, Caso caso) {
         try {
@@ -36,8 +41,9 @@ public class RevisionModelo {
     }
 
     private static void rechaza(Class<? extends Throwable> tipo, Caso caso) throws Exception {
-        try { caso.ejecutar(); }
-        catch (Throwable error) {
+        try {
+            caso.ejecutar();
+        } catch (Throwable error) {
             if (tipo.isInstance(error)) return;
             throw new AssertionError("Se esperaba " + tipo.getSimpleName() + " y se obtuvo " + error);
         }
@@ -73,8 +79,11 @@ public class RevisionModelo {
         probar("Cajero solo registra ventas", () -> verificar(cajero().obtenerPermisos()
                 .equals(Arrays.asList(Permiso.REGISTRAR_VENTA))));
         probar("Usuario se activa y desactiva", () -> {
-            Usuario u = cajero(); u.desactivar(); verificar(!u.isActivo());
-            u.activar(); verificar(u.isActivo());
+            Usuario u = cajero();
+            u.desactivar();
+            verificar(!u.isActivo());
+            u.activar();
+            verificar(u.isActivo());
         });
         probar("Usuario rechaza nombre vacio", () -> rechaza(IllegalArgumentException.class,
                 () -> cajero().setNombre(" ")));
@@ -98,39 +107,64 @@ public class RevisionModelo {
             verificar(p.getStock() == 10);
         });
         probar("Descuento, aumento y alerta de stock", () -> {
-            Producto p = producto(); p.descontarStock(8); verificar(p.tieneStockBajo());
-            p.aumentarStock(3); verificar(p.getStock() == 5 && !p.tieneStockBajo());
+            Producto p = producto();
+            p.descontarStock(8);
+            verificar(p.tieneStockBajo());
+            p.aumentarStock(3);
+            verificar(p.getStock() == 5 && !p.tieneStockBajo());
         });
         probar("Stock rechaza desbordamiento", () -> {
-            Producto p = producto(); p.setStock(Integer.MAX_VALUE);
+            Producto p = producto();
+            p.setStock(Integer.MAX_VALUE);
             rechaza(IllegalArgumentException.class, () -> p.aumentarStock(1));
             verificar(p.getStock() == Integer.MAX_VALUE);
         });
         probar("Venta suma cantidades y calcula costos", () -> {
-            Venta v = new Venta(cajero()); Producto p = producto();
-            v.agregarDetalle(p, 2); v.agregarDetalle(p, 1);
+            Venta v = new Venta(cajero());
+            Producto p = producto();
+            v.agregarDetalle(p, 2);
+            v.agregarDetalle(p, 1);
             verificar(v.getDetalles().size() == 1);
-            monto("30000", v.getTotal()); monto("18000", v.calcularCostoTotal());
+            monto("30000", v.getTotal());
+            monto("18000", v.calcularCostoTotal());
         });
         probar("Venta conserva precio y costo historicos", () -> {
-            Venta v = new Venta(cajero()); Producto p = producto(); v.agregarDetalle(p, 2);
-            p.setPrecioVenta(new BigDecimal("20000")); p.setCostoCompra(new BigDecimal("15000"));
-            monto("20000", v.getTotal()); monto("12000", v.calcularCostoTotal());
+            Venta v = new Venta(cajero());
+            Producto p = producto();
+            v.agregarDetalle(p, 2);
+            p.setPrecioVenta(new BigDecimal("20000"));
+            p.setCostoCompra(new BigDecimal("15000"));
+            monto("20000", v.getTotal());
+            monto("12000", v.calcularCostoTotal());
         });
         probar("Venta identifica productos persistidos por id", () -> {
-            Venta v = new Venta(cajero()); v.agregarDetalle(producto(), 1); v.agregarDetalle(producto(), 2);
-            verificar(v.getDetalles().size() == 1); monto("30000", v.getTotal());
+            Venta v = new Venta(cajero());
+            v.agregarDetalle(producto(), 1);
+            v.agregarDetalle(producto(), 2);
+            verificar(v.getDetalles().size() == 1);
+            monto("30000", v.getTotal());
         });
         probar("Venta distingue productos nuevos sin id", () -> {
-            Producto a = producto(); Producto b = producto(); a.setId(0); b.setId(0);
-            Venta v = new Venta(cajero()); v.agregarDetalle(a, 1); v.agregarDetalle(b, 1);
+            Producto a = producto();
+            Producto b = producto();
+            a.setId(0);
+            b.setId(0);
+            Venta v = new Venta(cajero());
+            v.agregarDetalle(a, 1);
+            v.agregarDetalle(b, 1);
             verificar(v.getDetalles().size() == 2);
         });
         probar("Venta reduce y quita detalles", () -> {
-            Venta v = new Venta(cajero()); Producto p = producto(); v.agregarDetalle(p, 2);
-            v.reducirCantidad(p); monto("10000", v.getTotal());
-            v.reducirCantidad(p); verificar(v.estaVacia());
-            v.agregarDetalle(p, 1); v.quitarDetalle(p); monto("0", v.getTotal());
+            Venta v = new Venta(cajero());
+            Producto p = producto();
+            v.agregarDetalle(p, 2);
+            v.reducirCantidad(p);
+            monto("10000", v.getTotal());
+            v.reducirCantidad(p);
+            verificar(v.estaVacia());
+            v.agregarDetalle(p, 1);
+            v.quitarDetalle(p);
+            monto("0", v.getTotal());
         });
         probar("Venta rechaza cantidad cero", () -> rechaza(IllegalArgumentException.class,
                 () -> new Venta(cajero()).agregarDetalle(producto(), 0)));
@@ -142,7 +176,8 @@ public class RevisionModelo {
         probar("Compra suma detalles", () -> {
             Compra c = new Compra(cajero(), "Proveedor");
             c.agregarDetalle(producto(), 3, new BigDecimal("6000"));
-            c.agregarDetalle(producto(), 2, new BigDecimal("5000")); monto("28000", c.getTotal());
+            c.agregarDetalle(producto(), 2, new BigDecimal("5000"));
+            monto("28000", c.getTotal());
         });
         probar("Compra rechaza proveedor vacio", () -> rechaza(IllegalArgumentException.class,
                 () -> new Compra(cajero(), " ")));
@@ -170,6 +205,31 @@ public class RevisionModelo {
                 cajero().obtenerPermisos().get(0).getClass() == (Class<?>) modelo.Permiso.class));
 
         probarClasesCompletadas();
+        // Regresion de la reconstruccion del total que necesita VentaDAO.
+        probar("Venta restaura total ajustado sin cambiar costos historicos", () -> {
+            Venta v = new Venta(cajero());
+            v.agregarDetalle(producto(), 2);
+            v.restaurarTotalRegistrado(new BigDecimal("19000"));
+            monto("19000", v.getTotal());
+            monto("12000", v.calcularCostoTotal());
+            rechaza(IllegalArgumentException.class,
+                    () -> v.restaurarTotalRegistrado(new BigDecimal("-1")));
+            monto("19000", v.getTotal());
+        });
+        probar("Editar el carrito descarta un total previamente restaurado", () -> {
+            Venta v = new Venta(cajero());
+            Producto p = producto();
+            v.agregarDetalle(p, 2);
+            v.restaurarTotalRegistrado(new BigDecimal("19000"));
+            v.agregarDetalle(p, 1);
+            monto("30000", v.getTotal());
+            v.restaurarTotalRegistrado(new BigDecimal("25000"));
+            v.reducirCantidad(p);
+            monto("20000", v.getTotal());
+            v.restaurarTotalRegistrado(new BigDecimal("19000"));
+            v.quitarDetalle(p);
+            monto("0", v.getTotal());
+        });
         System.out.println("RESULTADO: " + correctas + " correctas, " + fallidas + " fallidas");
         if (fallidas > 0) System.exit(1);
     }
@@ -179,8 +239,10 @@ public class RevisionModelo {
         LocalDate fecha = LocalDate.of(2026, 11, 6);
         // Integra entidades en memoria y verifica a mano las formulas de la guia.
         probar("Ejemplo completo de la guia con venta, gasto fijo y balance", () -> {
-            Producto p = producto(); p.setStock(100);
-            Venta venta = new Venta(cajero()); venta.agregarDetalle(p, 85);
+            Producto p = producto();
+            p.setStock(100);
+            Venta venta = new Venta(cajero());
+            venta.agregarDetalle(p, 85);
             BigDecimal ingresos = venta.calcularTotal();
             BigDecimal costos = venta.calcularCostoTotal();
             BigDecimal margen = ingresos.subtract(costos);
@@ -230,7 +292,8 @@ public class RevisionModelo {
         probar("Costo fijo calcula monto diario", () -> {
             CostoFijo c = new CostoFijo(0, "Arriendo", new BigDecimal("390000"), true);
             monto("13000", c.calcularMontoDiario(30));
-            c.setActivo(false); verificar(!c.isActivo());
+            c.setActivo(false);
+            verificar(!c.isActivo());
         });
         probar("Costo fijo rechaza monto negativo y divisor cero", () -> {
             rechaza(IllegalArgumentException.class,
@@ -240,11 +303,15 @@ public class RevisionModelo {
         });
         probar("Negocio tiene umbrales predeterminados de la guia", () -> {
             Negocio n = negocio();
-            monto("70", n.getUmbralAmarillo()); monto("15", n.getUmbralMargenBajo());
+            monto("70", n.getUmbralAmarillo());
+            monto("15", n.getUmbralMargenBajo());
         });
         probar("Negocio acepta los limites de dias de operacion", () -> {
-            Negocio n = negocio(); n.setDiasOperacion(1); verificar(n.getDiasOperacion() == 1);
-            n.setDiasOperacion(31); verificar(n.getDiasOperacion() == 31);
+            Negocio n = negocio();
+            n.setDiasOperacion(1);
+            verificar(n.getDiasOperacion() == 1);
+            n.setDiasOperacion(31);
+            verificar(n.getDiasOperacion() == 31);
         });
         probar("Negocio rechaza dias fuera del intervalo", () -> {
             rechaza(IllegalArgumentException.class, () -> negocio().setDiasOperacion(0));
@@ -260,7 +327,8 @@ public class RevisionModelo {
         probar("Negocio rechaza cierre igual a apertura", () -> rechaza(IllegalArgumentException.class,
                 () -> negocio().setHoraCierre(LocalTime.of(8, 0))));
         probar("Negocio cambia ambas horas de forma atomica", () -> {
-            Negocio n = negocio(); n.setHorario(LocalTime.of(19, 0), LocalTime.of(23, 0));
+            Negocio n = negocio();
+            n.setHorario(LocalTime.of(19, 0), LocalTime.of(23, 0));
             verificar(n.getHoraApertura().equals(LocalTime.of(19, 0)));
         });
         probar("Umbrales rechazan negativos y mayores de cien", () -> {
@@ -271,30 +339,36 @@ public class RevisionModelo {
         });
         probar("Cierre calcula sobrante, faltante e igualdad por valor", () -> {
             CierreDiario c = cierre("100000", "100500");
-            monto("500", c.getDiferencia()); verificar(c.hayDescuadre());
+            monto("500", c.getDiferencia());
+            verificar(c.hayDescuadre());
             c.setEfectivoContado(new BigDecimal("99500"));
-            monto("-500", c.calcularDiferenciaCaja()); verificar(c.hayDescuadre());
+            monto("-500", c.calcularDiferenciaCaja());
+            verificar(c.hayDescuadre());
             c.setEfectivoContado(new BigDecimal("100000.00"));
             verificar(!c.hayDescuadre());
         });
         probar("Cierre actualiza diferencia al cambiar efectivo del sistema", () -> {
             CierreDiario c = cierre("100", "100");
-            c.setEfectivoSistema(new BigDecimal("120")); monto("-20", c.getDiferencia());
+            c.setEfectivoSistema(new BigDecimal("120"));
+            monto("-20", c.getDiferencia());
         });
         probar("Cierre rechaza conteo negativo sin alterar el anterior", () -> {
             CierreDiario c = cierre("100", "100");
             rechaza(IllegalArgumentException.class,
                     () -> c.setEfectivoContado(new BigDecimal("-1")));
-            monto("100", c.getEfectivoContado()); verificar(!c.hayDescuadre());
+            monto("100", c.getEfectivoContado());
+            verificar(!c.hayDescuadre());
         });
         probar("Cierre permite perdida contable", () -> {
             CierreDiario c = cierre("0", "0");
-            c.setResultado(new BigDecimal("-100")); monto("-100", c.getResultado());
+            c.setResultado(new BigDecimal("-100"));
+            monto("-100", c.getResultado());
         });
         probar("Registro conserva valores y motivo de la modificacion", () -> {
             RegistroCambio r = new RegistroCambio(0, new Venta(cajero()), cajero(),
                     fecha.atStartOfDay(), new BigDecimal("100"), new BigDecimal("90"), " Ajuste ");
-            monto("100", r.getValorAnterior()); monto("90", r.getValorNuevo());
+            monto("100", r.getValorAnterior());
+            monto("90", r.getValorNuevo());
             verificar(r.getMotivo().equals("Ajuste"));
         });
         probar("Registro rechaza motivo vacio", () -> rechaza(IllegalArgumentException.class,
@@ -312,14 +386,16 @@ public class RevisionModelo {
             BalanceDia b = new BalanceDia(fecha, new BigDecimal("850000"), new BigDecimal("510000"),
                     new BigDecimal("340000"), new BigDecimal("390000"), new BigDecimal("-50000"),
                     new BigDecimal("975000"), new BigDecimal("125000"), new BigDecimal("87.18"));
-            monto("975000", b.getPuntoEquilibrio()); monto("-50000", b.getResultado());
+            monto("975000", b.getPuntoEquilibrio());
+            monto("-50000", b.getResultado());
             monto("340000", b.getMargenContribucion());
         });
         probar("Balance acepta dia sin ventas y perdida", () -> {
             BalanceDia b = new BalanceDia(fecha, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
                     new BigDecimal("100"), new BigDecimal("-100"), BigDecimal.ZERO,
                     BigDecimal.ZERO, BigDecimal.ZERO);
-            monto("0", b.getIngresos()); monto("-100", b.getResultado());
+            monto("0", b.getIngresos());
+            monto("-100", b.getResultado());
         });
         probar("Balance permite avance superior a cien", () -> {
             BalanceDia b = new BalanceDia(fecha, new BigDecimal("200"), BigDecimal.ZERO,
@@ -349,7 +425,8 @@ public class RevisionModelo {
         });
         probar("Venta y compra en curso no alteran inventario antes de confirmar", () -> {
             Producto p = producto();
-            Venta v = new Venta(cajero()); v.agregarDetalle(p, 2);
+            Venta v = new Venta(cajero());
+            v.agregarDetalle(p, 2);
             Compra c = new Compra(cajero(), "Proveedor");
             c.agregarDetalle(p, 3, new BigDecimal("6000"));
             verificar(p.getStock() == 10);

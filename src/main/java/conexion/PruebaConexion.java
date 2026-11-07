@@ -1,29 +1,22 @@
 package conexion;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
+/**
+ * Comprobacion JDBC sencilla: el SQL de negocio permanece exclusivamente en dao.
+ */
 public class PruebaConexion {
-
     public static void main(String[] args) {
-        conexionDB db = conexionDB.getInstance();
-
+        conexionDB administrador = conexionDB.getInstance();
         try {
-            Connection conexion = db.getConnection();
-
-            try (Statement consulta = conexion.createStatement();
-                 ResultSet resultado = consulta.executeQuery("SELECT 1")) {
-
-                if (resultado.next() && resultado.getInt(1) == 1) {
-                    System.out.println("Prueba correcta: la base de datos responde.");
-                }
-            }
+            Connection conexion = administrador.getConnection();
+            if (conexion.isValid(5)) System.out.println("La base de datos responde correctamente.");
+            else throw new SQLException("La conexion no responde");
         } catch (SQLException e) {
-            System.err.println("Falló la prueba: " + e.getMessage());
+            System.err.println("No se pudo verificar la conexion a MySQL.");
         } finally {
-            db.desconectar();
+            administrador.desconectar();
         }
     }
 }

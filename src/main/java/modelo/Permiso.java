@@ -1,6 +1,8 @@
 package modelo;
 
-/** Catalogo unico de acciones compartido por usuarios y servicios. */
+/**
+ * Catalogo unico de acciones compartido por usuarios y servicios.
+ */
 public enum Permiso {
     // Los permisos representan capacidades; no ejecutan operaciones.
     REGISTRAR_VENTA(1, "Registrar Venta"),
@@ -27,9 +29,17 @@ public enum Permiso {
     }
 
     // Consultas para persistencia y presentacion.
-    public int getId() { return id; }
-    public String getNombre() { return name(); }
-    public String getDescripcion() { return descripcion; }
+    public int getId() {
+        return id;
+    }
+
+    public String getNombre() {
+        return name();
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
 
     // Reconoce un nombre tecnico o su descripcion sin importar mayusculas.
     public static Permiso fromString(String texto) {
@@ -43,5 +53,7 @@ public enum Permiso {
 
     // Representacion legible para las vistas.
     @Override
-    public String toString() { return descripcion; }
+    public String toString() {
+        return descripcion;
+    }
 }

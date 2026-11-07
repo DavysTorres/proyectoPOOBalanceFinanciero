@@ -6,8 +6,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 
-
-/** Entidad del modelo: encapsula sus datos sin depender de vistas, servicios ni DAO. */
+/**
+ * Entidad del modelo: encapsula sus datos sin depender de vistas, servicios ni DAO.
+ */
 public class Producto {
 
     // Estado privado; los setters final conservan las validaciones al construir subclases.
@@ -41,6 +42,7 @@ public class Producto {
     public int getId() {
         return id;
     }
+
     // Valida y asigna el identificador sin permitir valores negativos.
     public final void setId(int id) {
         if (id < 0) {
@@ -53,9 +55,10 @@ public class Producto {
     public String getNombre() {
         return nombre;
     }
+
     // Rechaza nombres ausentes y elimina espacios exteriores.
     public final void setNombre(String nombre) {
-        if (nombre == null ||  nombre.trim().isEmpty()) {
+        if (nombre == null || nombre.trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre es obligatorio");
         }
         this.nombre = nombre.trim();
@@ -65,6 +68,7 @@ public class Producto {
     public BigDecimal getPrecioVenta() {
         return precioVenta;
     }
+
     // Valida que el precio de venta sea obligatorio y positivo.
     public final void setPrecioVenta(BigDecimal precioVenta) {
         if (precioVenta == null || precioVenta.compareTo(BigDecimal.ZERO) <= 0) {
@@ -77,6 +81,7 @@ public class Producto {
     public BigDecimal getCostoCompra() {
         return costoCompra;
     }
+
     // Rechaza costos nulos, negativos o iguales a cero.
     public final void setCostoCompra(BigDecimal costoCompra) {
         if (costoCompra == null || costoCompra.compareTo(BigDecimal.ZERO) <= 0) {
@@ -89,6 +94,7 @@ public class Producto {
     public int getStock() {
         return stock;
     }
+
     // Evita establecer existencias negativas.
     public final void setStock(int stock) {
         if (stock < 0) {
@@ -101,6 +107,7 @@ public class Producto {
     public int getStockMinimo() {
         return stockMinimo;
     }
+
     // El limite de stock puede ser cero, pero nunca negativo.
     public final void setStockMinimo(int stockMinimo) {
         if (stockMinimo < 0) {
@@ -113,6 +120,7 @@ public class Producto {
     public boolean isActivo() {
         return activo;
     }
+
     // Permite la baja logica del producto sin borrar su historial.
     public final void setActivo(boolean activo) {
         this.activo = activo;
@@ -157,7 +165,7 @@ public class Producto {
      * Verifica si hay suficiente stock para cubrir una cantidad solicitada.
      */
     public boolean hayStock(int cantidad) {
-        if(cantidad < 0) return false;
+        if (cantidad < 0) return false;
         return this.stock >= cantidad;
     }
 
@@ -165,14 +173,14 @@ public class Producto {
      * Descuenta stock de la cantidad disponible.
      * Lanza una excepción si no hay suficiente stock.
      */
-    public void descontarStock(int cantidad) throws StockInsuficienteException{
-        if(cantidad <= 0){
+    public void descontarStock(int cantidad) throws StockInsuficienteException {
+        if (cantidad <= 0) {
             throw new IllegalArgumentException("La cantidad debe ser mayor que cero");
         }
-        if(!hayStock(cantidad)){
+        if (!hayStock(cantidad)) {
             throw new StockInsuficienteException(
                     "Stock insuficiente para el producto '" + this.nombre + "'. " +
-            "Solicitado: " + cantidad + ", Disponible: " + this.stock
+                            "Solicitado: " + cantidad + ", Disponible: " + this.stock
             );
         }
         this.stock -= cantidad;
@@ -202,8 +210,8 @@ public class Producto {
                 ", stockMinimo=" + stockMinimo +
                 ", activo=" + activo +
                 ", margen=" + (precioVenta == null || costoCompra == null
-                        ? "sin calcular"
-                        : String.format("%.2f", calcularMargen()) + "%") +
+                ? "sin calcular"
+                : String.format("%.2f", calcularMargen()) + "%") +
                 '}';
     }
 

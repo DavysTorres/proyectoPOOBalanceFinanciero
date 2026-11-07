@@ -3,7 +3,9 @@ package modelo;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/** Evidencia de una modificacion: no ofrece setters ni operaciones de borrado. */
+/**
+ * Evidencia de una modificacion: no ofrece setters ni operaciones de borrado.
+ */
 public final class RegistroCambio {
     // Los valores, motivo y fecha quedan fijados; venta y usuario son asociaciones.
     private final int id;
@@ -32,23 +34,37 @@ public final class RegistroCambio {
     }
 
     // Consulta id; la asociacion no permite reemplazar datos del registro.
-    public int getId() { return id; }
+    public int getId() {
+        return id;
+    }
 
     // Consulta venta; la asociacion no permite reemplazar datos del registro.
-    public Venta getVenta() { return venta; }
+    public Venta getVenta() {
+        return venta;
+    }
 
     // Consulta usuario; la asociacion no permite reemplazar datos del registro.
-    public Usuario getUsuario() { return usuario; }
+    public Usuario getUsuario() {
+        return usuario;
+    }
 
     // Consulta fechaHora; la asociacion no permite reemplazar datos del registro.
-    public LocalDateTime getFechaHora() { return fechaHora; }
+    public LocalDateTime getFechaHora() {
+        return fechaHora;
+    }
 
     // Consulta valorAnterior; la asociacion no permite reemplazar datos del registro.
-    public BigDecimal getValorAnterior() { return valorAnterior; }
+    public BigDecimal getValorAnterior() {
+        return valorAnterior;
+    }
 
     // Consulta valorNuevo; la asociacion no permite reemplazar datos del registro.
-    public BigDecimal getValorNuevo() { return valorNuevo; }
+    public BigDecimal getValorNuevo() {
+        return valorNuevo;
+    }
 
     // Consulta motivo; la asociacion no permite reemplazar datos del registro.
-    public String getMotivo() { return motivo; }
+    public String getMotivo() {
+        return motivo;
+    }
 }

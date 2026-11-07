@@ -3,7 +3,9 @@ package modelo;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-/** Abstraccion de un gasto: comparte datos, pero delega su calculo diario. */
+/**
+ * Abstraccion de un gasto: comparte datos, pero delega su calculo diario.
+ */
 public abstract class Gasto {
     // Estado encapsulado comun a gastos fijos y variables.
     private int id;
@@ -22,29 +24,46 @@ public abstract class Gasto {
     }
 
     // El id cero permite crear gastos antes de persistirlos.
-    public int getId() { return id; }
-    public final void setId(int id) { this.id = ValidacionModelo.id(id); }
+    public int getId() {
+        return id;
+    }
+
+    public final void setId(int id) {
+        this.id = ValidacionModelo.id(id);
+    }
 
     // Identifica a quien registra el gasto sin realizar consultas a la base de datos.
-    public Usuario getUsuario() { return usuario; }
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
     public final void setUsuario(Usuario usuario) {
         this.usuario = ValidacionModelo.obligatorio(usuario, "El usuario");
     }
 
     // El concepto describe el motivo del gasto.
-    public String getConcepto() { return concepto; }
+    public String getConcepto() {
+        return concepto;
+    }
+
     public final void setConcepto(String concepto) {
         this.concepto = ValidacionModelo.texto(concepto, "El concepto");
     }
 
     // BigDecimal conserva el importe decimal sin errores propios de double.
-    public BigDecimal getMonto() { return monto; }
+    public BigDecimal getMonto() {
+        return monto;
+    }
+
     public final void setMonto(BigDecimal monto) {
         this.monto = ValidacionModelo.positivo(monto, "El monto");
     }
 
     // La fecha relaciona el gasto con el periodo contable correspondiente.
-    public LocalDate getFecha() { return fecha; }
+    public LocalDate getFecha() {
+        return fecha;
+    }
+
     public final void setFecha(LocalDate fecha) {
         this.fecha = ValidacionModelo.obligatorio(fecha, "La fecha");
     }

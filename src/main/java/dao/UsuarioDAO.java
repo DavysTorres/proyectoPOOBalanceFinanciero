@@ -1,81 +1,89 @@
 package dao;
 
-import conexion.conexionDB;
-import modelo.Administrador;
-import modelo.Cajero;
-import modelo.Jefe;
-import modelo.Usuario;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.LocalDateTime;
+import modelo.*;
+
+import java.sql.*;
 import java.util.List;
 
-public class UsuarioDAO implements CrudDAO<Usuario> {
-
-    private Connection conexion;
-
+/**
+ * Persistencia de usuarios con baja logica y reconstruccion de la subclase adecuada.
+ */
+public class UsuarioDAO extends DAOBase<Usuario> implements CrudDAO<Usuario> {
+    // Ambos constructores permiten usar la conexion de la aplicacion o una conexion de pruebas.
     public UsuarioDAO() {
-        // Obtenemos la conexión única usando el Singleton
-        try {
-            this.conexion = conexionDB.getInstance().getConnection();
-        } catch (SQLException e) {
-            throw new IllegalStateException("No se pudo obtener la conexion para UsuarioDAO", e);
+        super();
+    }
+
+    public UsuarioDAO(Connection conexion) {
+        super(conexion);
+    }
+
+    // Factory: la columna rol determina el tipo real del objeto reconstruido.
+    @Override
+    protected Usuario mapear(ResultSet r) throws SQLException {
+        int id = r.getInt("id");
+        String nombre = r.getString("nombre"), usuario = r.getString("username");
+        String hash = r.getString("password_hash");
+        boolean activo = r.getBoolean("activo");
+        java.time.LocalDateTime fecha = r.getTimestamp("creado_en").toLocalDateTime();
+        switch (Rol.fromString(r.getString("rol"))) {
+            case ADMINISTRADOR:
+                return new Administrador(id, nombre, usuario, hash, activo, fecha);
+            case JEFE:
+                return new Jefe(id, nombre, usuario, hash, activo, fecha);
+            case CAJERO:
+                return new Cajero(id, nombre, usuario, hash, activo, fecha);
+            default:
+                throw new SQLException("Rol desconocido");
         }
     }
 
-    //Heredamos los metodos del CrudDAO
+    // Guarda un hash ya calculado por autenticacion; nunca almacena aqui una clave en texto plano.
     @Override
-    public void guardar(Usuario entidad) {
-        // Lógica SQL INSERT...
+    public void guardar(Usuario u) {
+        nuevo(u.getId());
+        int id = insertar("INSERT INTO usuarios(nombre,username,password_hash,rol,activo,creado_en) VALUES (?,?,?,?,?,?)",
+                u.getNombre(), u.getUsername(), u.getPasswordHash(), u.getRol().name(), u.isActivo(), u.getCreadoEn());
+        u.setId(id);
     }
 
+    // Actualiza datos sin eliminar relaciones con ventas o historial.
     @Override
-    public void actualizar(Usuario entidad) {
-        // Lógica SQL UPDATE...
+    public void actualizar(Usuario u) {
+        idValido(u.getId());
+        exigirCambio(ejecutar("UPDATE usuarios SET nombre=?,username=?,password_hash=?,rol=?,activo=? WHERE id=?",
+                u.getNombre(), u.getUsername(), u.getPasswordHash(), u.getRol().name(), u.isActivo(), u.getId()));
     }
 
+    // Busquedas individuales, por nombre de acceso, y listados de administracion.
     @Override
     public Usuario buscarPorId(int id) {
-        // Lógica SQL SELECT WHERE id = ?
-        return null;
+        idValido(id);
+        return uno("SELECT * FROM usuarios WHERE id=?", id);
+    }
+
+    public Usuario buscarPorUsername(String username) {
+        return uno("SELECT * FROM usuarios WHERE username=?", texto(username));
     }
 
     @Override
     public List<Usuario> listarTodos() {
-        // Lógica SQL SELECT *
-        return null;
-    }
-
-    //Metodos unicos de UsuarioDAO
-    public Usuario buscarPorUsername(String username) {
-        // Lógica SQL SELECT WHERE username = ?
-        return null;
+        return consultar("SELECT * FROM usuarios ORDER BY id");
     }
 
     public List<Usuario> listarActivos() {
-        // Lógica SQL SELECT WHERE activo = true
-        return null;
+        return consultar("SELECT * FROM usuarios WHERE activo=TRUE ORDER BY nombre,id");
     }
 
+    // Baja logica: la entidad continua disponible para sus registros historicos.
     public void cambiarEstado(int id, boolean activo) {
-        // Lógica SQL UPDATE usuario SET activo = ? WHERE id = ?
+        idValido(id);
+        exigirCambio(ejecutar("UPDATE usuarios SET activo=? WHERE id=?", activo, id));
     }
 
+    // El servicio genera el hash y autoriza quien puede restablecer la clave.
     public void actualizarPassword(int id, String hash) {
-        // Lógica SQL UPDATE usuario SET passwordHash = ? WHERE id = ?
-    }
-
-    // Este método lo usarás internamente cuando leas un registro de la BD
-    private Usuario construirUsuarioFactory(int id, String nombre, String username, String hash, String rolStr, boolean activo, LocalDateTime fecha) {
-        switch (rolStr.toUpperCase()) {
-            case "ADMINISTRADOR":
-                return new Administrador(id, nombre, username, hash, activo, fecha);
-            case "CAJERO":
-                return new Cajero(id, nombre, username, hash, activo, fecha);
-            case "JEFE":
-                return new Jefe(id, nombre, username, hash, activo, fecha);
-            default:
-                throw new IllegalArgumentException("Rol desconocido en la base de datos: " + rolStr);
-        }
+        idValido(id);
+        exigirCambio(ejecutar("UPDATE usuarios SET password_hash=? WHERE id=?", texto(hash), id));
     }
 }
