@@ -11,9 +11,9 @@ $fuentesModelo = @(Get-ChildItem (Join-Path $raizProyecto 'src/main/java/modelo/
     ForEach-Object FullName)
 $excepcionStock = Join-Path $raizProyecto 'src/main/java/excepciones/StockInsuficienteException.java'
 $pruebasModelo = Join-Path $raizProyecto 'src/test/java/modelo/RevisionModelo.java'
-& javac -encoding UTF-8 -Xlint:all -d $salidaPruebas @fuentesModelo $excepcionStock $pruebasModelo
+& javac -J-Xmx128m -J-XX:ReservedCodeCacheSize=32m --release 17 -encoding UTF-8 -Xlint:all -d $salidaPruebas @fuentesModelo $excepcionStock $pruebasModelo
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Cada caso informa su resultado y cualquier fallo produce un codigo de salida distinto de cero.
-& java -cp $salidaPruebas modelo.RevisionModelo
+& java -Xmx128m -XX:ReservedCodeCacheSize=32m -cp $salidaPruebas modelo.RevisionModelo
 exit $LASTEXITCODE

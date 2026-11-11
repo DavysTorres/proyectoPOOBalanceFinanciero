@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
-/** Entidad del modelo: encapsula sus datos sin depender de vistas, servicios ni DAO. */
+/**
+ * Entidad del modelo: encapsula sus datos sin depender de vistas, servicios ni DAO.
+ */
 public class Jefe extends Usuario {
 
     //Constructor
@@ -39,5 +41,5 @@ public class Jefe extends Usuario {
                 "Cierre de caja"
         );
     }
-    
+
 }

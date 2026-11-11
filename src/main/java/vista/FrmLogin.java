@@ -1,157 +1,114 @@
 package vista;
 
+import vista.contratos.*;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 
-public class FrmLogin {
-
-    private JFrame ventana;
-    private JPanel panelPrincipal;
-    private JPanel panelMarca;
-    private JPanel panelFormulario;
-    private JPanel panelRegistro;
-
-    private JLabel lblUsuario;
-    private JLabel lblContrasena;
-    private JLabel lblSinCuenta;
-    private JLabel lblMarca;
-
-    private JTextField txtUsuario;
-    private JPasswordField txtContrasena;
-
-    private JButton btnIngresar;
-    private JButton btnRegistrar;
+/**
+ * Recoge credenciales; el LoginControlador realiza la autenticacion.
+ */
+public final class FrmLogin extends FrmBase implements VistaLogin {
+    private final JTextField usuario;
+    private final JPasswordField contrasena;
 
     public FrmLogin() {
-        ventana = new JFrame("LOGIN");
-        ventana.setContentPane(formulario());
-        ventana.setJMenuBar(menubar());
-        ventana.getRootPane().setDefaultButton(btnIngresar);
-        ventana.pack();
-        ventana.setLocationRelativeTo(null);
-        ventana.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        ventana.setVisible(true);
-    }
+        super("Inicio de sesion");
+        usuario = new JTextField(20);
+        contrasena = new JPasswordField(20);
+        JButton ingresar = new JButton("Ingresar");
+        registrarBoton(AccionVista.INGRESAR, ingresar);
 
-    private JPanel formulario() {
-        panelPrincipal = new JPanel();
-        panelPrincipal.setLayout(new GridLayout(1,2));
+        JPanel principal = new JPanel(new GridLayout(1, 2));
+        JPanel marca = new JPanel(new GridBagLayout());
+        marca.setBackground(new Color(0, 91, 100));
+        JLabel logo = new JLabel("BALANCE");
+        logo.setForeground(Color.WHITE);
+        logo.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 30));
+        marca.add(logo);
 
-        lblUsuario = new JLabel("Usuario:");
-        lblContrasena = new JLabel("Contrasena:");
-        lblSinCuenta = new JLabel("No tengo una cuenta:");
+        JPanel formulario = new JPanel();
+        formulario.setLayout(new BoxLayout(formulario, BoxLayout.Y_AXIS));
+        formulario.setBorder(BorderFactory.createEmptyBorder(40, 30, 40, 30));
+        formulario.setBackground(Color.WHITE);
+        JLabel titulo = new JLabel("INICIAR SESIÓN");
+        titulo.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 22));
+        formulario.add(titulo);
+        formulario.add(Box.createVerticalStrut(28));
+        formulario.add(new JLabel("Usuario"));
+        formulario.add(Box.createVerticalStrut(6));
+        formulario.add(usuario);
+        formulario.add(Box.createVerticalStrut(16));
+        formulario.add(new JLabel("Contraseña"));
+        formulario.add(Box.createVerticalStrut(6));
+        formulario.add(contrasena);
+        formulario.add(Box.createVerticalStrut(22));
+        ingresar.setBackground(new Color(0, 91, 100));
+        ingresar.setForeground(Color.WHITE);
+        ingresar.setOpaque(true);
+        ingresar.setBorderPainted(false);
+        formulario.add(ingresar);
+        formulario.add(Box.createVerticalStrut(22));
+        formulario.add(Box.createVerticalGlue());
+        JButton solicitarCuenta = new JButton("Registrarse");
+        solicitarCuenta.addActionListener(e -> mostrarInformacion(
+                "Solicite su cuenta al administrador. Los usuarios se crean desde el menu Usuarios."));
+        JPanel registro = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        registro.setOpaque(false);
+        registro.add(new JLabel("¿No tiene cuenta  "));
+        registro.add(solicitarCuenta);
+        registro.setMaximumSize(new Dimension(Integer.MAX_VALUE, registro.getPreferredSize().height));
+        formulario.add(registro);
 
-        txtUsuario = new JTextField(20);
-        txtContrasena = new JPasswordField(20);
-
-        btnIngresar = new JButton("Login");
-        btnRegistrar = new JButton("Sing Up");
-
-        btnIngresar.addActionListener(e -> iniciarSesion());
-
-        panelMarca = new JPanel(new GridBagLayout());
-        panelMarca.setBackground(new Color(0, 91, 100));
-        lblMarca = new JLabel("BALANCE LOGO");
-        lblMarca.setForeground(Color.WHITE);
-        lblMarca.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 26));
-        panelMarca.add(lblMarca);
-
-        panelFormulario = new JPanel();
-        panelFormulario.setLayout(new BoxLayout(panelFormulario, BoxLayout.Y_AXIS));
-        panelFormulario.setBorder(BorderFactory.createEmptyBorder(30, 25, 30, 25));
-        panelFormulario.setBackground(Color.WHITE);
-        panelFormulario.add(new JLabel("LOGIN"));
-        panelFormulario.add(Box.createVerticalStrut(20));
-
-        panelFormulario.add(lblUsuario);
-        panelFormulario.add(txtUsuario);
-        panelFormulario.add(Box.createVerticalStrut(10));
-
-        panelFormulario.add(lblContrasena);
-        panelFormulario.add(txtContrasena);
-        panelFormulario.add(Box.createVerticalStrut(15));
-
-        panelFormulario.add(btnIngresar);
-        panelFormulario.add(Box.createVerticalStrut(20));
-
-        panelPrincipal.add(panelMarca);
-        panelPrincipal.add(panelFormulario);
-
-        panelRegistro = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        panelRegistro.setOpaque(false);
-
-        panelRegistro.add(lblSinCuenta);
-        panelRegistro.add(Box.createHorizontalStrut(10));
-        panelRegistro.add(btnRegistrar);
-        panelFormulario.add(panelRegistro);
-
-        // BoxLayout debe usar la misma alineación para todos sus componentes.
-        for (Component componente : panelFormulario.getComponents()) {
-            if (componente instanceof JComponent) {
+        for (JTextField campo : new JTextField[]{usuario, contrasena}) {
+            campo.setPreferredSize(new Dimension(280, 36));
+            campo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+        }
+        ingresar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        ingresar.setPreferredSize(new Dimension(280, 40));
+        for (Component componente : formulario.getComponents()) {
+            if (componente instanceof JComponent)
                 ((JComponent) componente).setAlignmentX(Component.LEFT_ALIGNMENT);
-            }
         }
-
-
-
-        return panelPrincipal;
+        principal.add(marca);
+        principal.add(formulario);
+        setContentPane(principal);
+        setJMenuBar(crearMenu());
+        getRootPane().setDefaultButton(ingresar);
+        usuario.getAccessibleContext().setAccessibleName("Usuario");
+        contrasena.getAccessibleContext().setAccessibleName("Contraseña");
+        setMinimumSize(new Dimension(780, 460));
+        setSize(840, 500);
+        setLocationRelativeTo(null);
     }
 
-    private void iniciarSesion() {
-        String usuario = txtUsuario.getText().trim();
-        char[] contrasena = txtContrasena.getPassword();
-
-        try {
-            if (usuario.isEmpty()) {
-                JOptionPane.showMessageDialog(ventana, "Ingrese su usuario.",
-                        "Datos incompletos", JOptionPane.WARNING_MESSAGE);
-                txtUsuario.requestFocusInWindow();
-                return;
-            }
-
-            if (contrasena.length == 0) {
-                JOptionPane.showMessageDialog(ventana, "Ingrese su contraseña.",
-                        "Datos incompletos", JOptionPane.WARNING_MESSAGE);
-                txtContrasena.requestFocusInWindow();
-                return;
-            }
-
-            // Conectar aquí el servicio que compruebe las credenciales.
-            JOptionPane.showMessageDialog(ventana,
-                    "Campos completos. Falta conectar el servicio de autenticación.",
-                    "Inicio de sesión", JOptionPane.INFORMATION_MESSAGE);
-        } finally {
-            java.util.Arrays.fill(contrasena, '\0');
-        }
-    }
-
-    private JMenuBar menubar(){
-        JMenuBar menubar = new JMenuBar();
-
-        JMenu mnArchivo = new JMenu("Archivo");
-        JMenu mnEditar = new JMenu("Editar");
-
-        JMenuItem miGuardar = new JMenuItem("Guardar");
-        JMenuItem miSalir = new JMenuItem("Salir");
-
-        miSalir.addActionListener(new  ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                var op = JOptionPane.showConfirmDialog(null,"¿Quiere salir?");
-                if(op == JOptionPane.YES_OPTION){
-                    System.exit(0);
-                }
-            }
+    private JMenuBar crearMenu() {
+        JMenuBar barra = new JMenuBar();
+        JMenu archivo = new JMenu("Archivo");
+        JMenuItem salir = new JMenuItem("Salir");
+        salir.addActionListener(e -> {
+            if (JOptionPane.showConfirmDialog(this, "¿Quiere salir?", "Salir",
+                    JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
+                dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
         });
+        archivo.add(salir);
+        barra.add(archivo);
+        return barra;
+    }
 
-        mnArchivo.add(miGuardar);
-        mnArchivo.add(miSalir);
+    @Override
+    public String getUsername() {
+        return usuario.getText();
+    }
 
-        menubar.add(mnArchivo);
-        menubar.add(mnEditar);
+    @Override
+    public char[] getContrasena() {
+        return contrasena.getPassword();
+    }
 
-        return menubar;
+    @Override
+    public void limpiarContrasena() {
+        contrasena.setText("");
     }
 }
