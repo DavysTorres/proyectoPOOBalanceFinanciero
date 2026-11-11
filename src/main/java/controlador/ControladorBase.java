@@ -1,5 +1,6 @@
 package controlador;
 
+import vista.contratos.VistaBase;
 import excepciones.*;
 
 import java.math.BigDecimal;
