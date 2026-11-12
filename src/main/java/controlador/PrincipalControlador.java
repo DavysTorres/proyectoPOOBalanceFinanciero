@@ -36,11 +36,20 @@ public final class PrincipalControlador extends ControladorBase<VistaPrincipal> 
 
     // Solo se entrega un estado, para que el cajero no reciba las cifras financieras restringidas.
     public void cargarSemaforo() {
-        ejecutar(() -> servicios.getBalance().obtenerResumenDelDia(), resumen -> {
+        ejecutar(() -> {
+            var resumen = servicios.getBalance().obtenerResumenDelDia();
+            var usuario = Sesion.getInstancia().getUsuarioActual();
+            modelo.BalanceDia balance = usuario != null && usuario.tienePermiso(Permiso.VER_BALANCE)
+                    ? servicios.getBalance().obtenerBalanceDelDia(java.time.LocalDate.now()) : null;
+            return new DatosInicio(resumen, balance);
+        }, datos -> {
             vista.mostrarUsuario(Sesion.getInstancia().getUsuarioActual());
-            vista.mostrarResumenSemaforo(resumen);
+            vista.mostrarResumenSemaforo(datos.resumen());
+            vista.mostrarBalanceDashboard(datos.balance());
         });
     }
+
+    private record DatosInicio(ResumenSemaforo resumen, modelo.BalanceDia balance) { }
 
     public void actualizarSemaforo() {
         cargarSemaforo();

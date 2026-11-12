@@ -40,6 +40,22 @@ public final class RevisionVentanas {
         return new BigDecimal(valor);
     }
 
+    private static <T extends Component> T componente(Container padre, Class<T> tipo, String texto) {
+        for (Component c : padre.getComponents()) {
+            if (tipo.isInstance(c) && (c instanceof JButton && texto.equals(((JButton)c).getText())
+                    || c instanceof JLabel && texto.equals(((JLabel)c).getText()))) return tipo.cast(c);
+            if (c instanceof Container) {
+                T resultado = componente((Container)c, tipo, texto);
+                if (resultado != null) return resultado;
+            }
+        }
+        return null;
+    }
+
+    private static JTextField campo(FrmModulo ventana, String etiqueta) {
+        return (JTextField) componente(ventana.campos, JLabel.class, etiqueta).getLabelFor();
+    }
+
     private static void imagen(FrmBase ventana, String nombre) throws Exception {
         try {
             ventana.addNotify();
@@ -85,7 +101,7 @@ public final class RevisionVentanas {
                     imagen(new FrmInicializacion(), "inicializacion");
                 });
                 caso("Menu y semaforo presentan estado y avance", () -> {
-                    FrmPrincipal principal = new FrmAdministracion(admin);
+                    FrmPrincipal principal = new FrmPrincipal(admin);
                     principal.mostrarResumenSemaforo(new ResumenSemaforo(new EstadoAmarillo(), "Las ventas se acercan a la meta.", d("87.18"), true));
                     imagen(principal, "principal");
                 });
@@ -129,6 +145,54 @@ public final class RevisionVentanas {
                     imagen(new FrmMargen(), "margen");
                     imagen(new FrmModificarVenta(), "modificar");
                     imagen(new FrmCierreCaja(), "cierre");
+                });
+                caso("Modificar exige consultar y descarta la venta anterior al cambiar numero", () -> {
+                    FrmModificarVenta v = new FrmModificarVenta();
+                    try {
+                        JButton guardar = componente(v, JButton.class, "Guardar ajuste");
+                        verificar(!guardar.isEnabled());
+                        campo(v, "Número de venta:").setText("7");
+                        ServicioVentas servicio = new ServicioVentas() {
+                            @Override public Venta buscarVenta(int id) {
+                                verificar(id == 7);
+                                Venta venta = new Venta(admin);
+                                venta.setId(id);
+                                venta.agregarDetalle(producto, 2);
+                                return venta;
+                            }
+                        };
+                        EjecutorTareas inmediato = new EjecutorTareas() {
+                            public <T> void ejecutar(Operacion<T> tarea, Consumer<T> exito, Consumer<Exception> error) {
+                                try { exito.accept(tarea.ejecutar()); }
+                                catch (Exception e) { throw new AssertionError(e); }
+                            }
+                        };
+                        v.conectar(new ModificarVentaControlador(v, servicio, inmediato));
+                        componente(v, JButton.class, "Buscar venta").doClick();
+                        verificar(guardar.isEnabled() && v.getNuevoTotal().equals("20000"));
+                        v.setOcupada(true);
+                        verificar(!guardar.isEnabled() && !campo(v, "Número de venta:").isEnabled());
+                        v.setOcupada(false);
+                        verificar(guardar.isEnabled());
+                        imagen(v, "modificar-consultada");
+                        campo(v, "Número de venta:").setText("8");
+                        verificar(!guardar.isEnabled() && v.getNuevoTotal().isEmpty());
+                    } finally { v.cerrar(); }
+                });
+                caso("Seleccion administrativa respeta orden de tabla y bloquea stock existente", () -> {
+                    FrmProductos v = new FrmProductos();
+                    try {
+                        Producto otro = new Producto(2, "Arroz", d("5000"), d("4000"), 20, 3);
+                        v.mostrarProductos(Arrays.asList(producto, otro));
+                        JScrollPane scroll = (JScrollPane)((BorderLayout)v.cuerpo.getLayout()).getLayoutComponent(BorderLayout.CENTER);
+                        JTable tabla = (JTable)scroll.getViewport().getView();
+                        tabla.getRowSorter().toggleSortOrder(1);
+                        tabla.setRowSelectionInterval(0, 0);
+                        verificar(v.getIdSeleccionado() == 2 && v.getNombre().equals("Arroz"));
+                        verificar(!campo(v, "Stock inicial / actual:").isEditable());
+                        componente(v, JButton.class, "Limpiar").doClick();
+                        verificar(v.getIdSeleccionado() == null && campo(v, "Stock inicial / actual:").isEditable());
+                    } finally { v.cerrar(); }
                 });
                 caso("Cada ventana concreta acepta los eventos de su controlador", () -> {
                     EjecutorTareas inmediato = new EjecutorTareas() {

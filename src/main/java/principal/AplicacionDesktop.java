@@ -59,7 +59,7 @@ public final class AplicacionDesktop implements Navegacion {
     @Override
     public void abrirMenu(Usuario usuario) {
         cerrarVentanas();
-        FrmPrincipal vista = usuario.getRol() == modelo.Rol.ADMINISTRADOR ? new FrmAdministracion(usuario) : new FrmPrincipal(usuario);
+        FrmPrincipal vista = new FrmPrincipal(usuario);
         PrincipalControlador controlador = controladores.crearPrincipal(vista, this);
         vista.conectar(controlador);
         principal = vista;
@@ -68,12 +68,13 @@ public final class AplicacionDesktop implements Navegacion {
         controlador.cargarSemaforo();
     }
 
-    // Una sola ventana por destino evita dos formularios trabajando sobre el mismo carrito.
+    // Conserva los formularios al navegar para no perder carritos ni datos pendientes.
     @Override
     public void abrir(Pantalla pantalla) {
+        if (principal == null || (principal.getModuloActual() != null && principal.getModuloActual().estaOcupada())) return;
         FrmBase existente = ventanas.get(pantalla);
-        if (existente != null && existente.isDisplayable()) {
-            existente.toFront();
+        if (existente != null) {
+            principal.mostrarModulo(existente);
             return;
         }
         switch (pantalla) {
@@ -169,6 +170,7 @@ public final class AplicacionDesktop implements Navegacion {
                             return null;
                         },
                         resultado -> {
+                            principal.retirarModulo(vista);
                             vista.cerrar();
                             ventanas.remove(pantalla);
                             actualizarPrincipal();
@@ -178,12 +180,13 @@ public final class AplicacionDesktop implements Navegacion {
                             vista.mostrarError("No se pudo cancelar la venta.");
                         });
             } else {
+                principal.retirarModulo(vista);
                 vista.cerrar();
                 ventanas.remove(pantalla);
                 actualizarPrincipal();
             }
         });
-        vista.mostrar();
+        principal.mostrarModulo(vista);
     }
 
     // Cerrar un formulario de movimientos permite refrescar la pantalla principal.

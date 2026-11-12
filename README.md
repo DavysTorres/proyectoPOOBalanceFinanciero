@@ -22,13 +22,18 @@ Si ya hay usuarios, se abre el login real. Las cuentas antiguas con hashes SHA-2
 
 ## Uso desde las ventanas
 
-- Administrador: seis botones de administracion y un menu Operaciones para las demas acciones permitidas.
+Tras iniciar sesion, las opciones del menu se muestran dentro del panel central de la ventana principal. La barra lateral permanece disponible y Resumen del dia permite volver al dashboard. Cambiar de seccion conserva los formularios y el carrito pendientes; la flecha Volver cierra ese formulario y, en ventas, cancela el carrito. Cerrar sesion cierra todos los modulos de la sesion. El menu se bloquea mientras se procesa una operacion.
+
+- Administrador: menu lateral de operaciones y panel interno de administracion con seis accesos.
 - Jefe: venta, compras y gastos, balance, margenes, historial, ajustes y cierre.
 - Cajero: registrar ventas y consultar semaforo y progreso, sin recibir cifras monetarias del balance.
 - Venta: cargar productos, pulsar Nueva venta, seleccionar producto y cantidad, agregar al carrito y cobrar. Las pestanas separan catalogo y carrito.
-- Compras: buscar productos, seleccionar proveedor, cantidad y costo; agregar lineas y guardar. El mismo formulario registra gastos.
-- Balance: escribir una fecha AAAA-MM-DD, consultar las cifras y grafica, o exportar CSV.
+- Compras: escribir el proveedor, buscar y seleccionar un producto del catalogo, indicar cantidad y costo; agregar lineas y guardar. Las pestanas separan compras, gastos y registros del dia. La fecha del gasto la asigna el servicio al guardar; los gastos fijos requieren dias de operacion.
+- Margenes: consultar los productos con mayor y menor margen, seleccionar uno y pulsar Ver consejo. Los datos provienen del catalogo y del analizador del proyecto.
+- Balance: escribir una fecha AAAA-MM-DD, consultar las siete cifras o exportar CSV.
 - Cierre: consultar el efectivo esperado, introducir el conteo y confirmar el cierre. Una jornada cerrada rechaza nuevos movimientos y ajustes.
+- Modificar venta (administrador y jefe): buscar por numero, revisar productos y total, introducir el nuevo total y explicar el motivo. Cambiar el numero invalida la consulta anterior. El servicio conserva el historial del ajuste.
+- Configuracion inicial: crear el primer administrador y definir nombre del negocio, dias de operacion, horario y umbrales. Despues del primer uso, la configuracion del negocio pertenece al administrador.
 - Usuarios y catalogos: seleccionar una fila para editar o desactivar. Las tablas de usuarios nunca muestran hashes.
 - El semaforo se actualiza despues de guardar operaciones y tambien mediante Actualizar semaforo.
 
@@ -49,6 +54,23 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/probar-general.ps1
 El script compila todo con --release 17, limita memoria y ejecuta las pruebas por partes. Las pruebas MySQL crean esquemas aleatorios y los eliminan al terminar. Requieren que el usuario de pruebas tenga permiso para crear y eliminar esas bases temporales. Las pruebas de ventanas no se muestran en pantalla y guardan imagenes dentro de target/revision-ventanas.
 
 Tambien existen probar-modelo.ps1, probar-dao.ps1, probar-servicio.ps1 y probar-controlador.ps1. Los scripts con MySQL aceptan -MysqlJar si el conector esta en una ruta diferente del repositorio Maven local.
+
+La revision aislada de los formularios adjuntos no requiere MySQL:
+
+```powershell
+javac -encoding UTF-8 --release 17 -d target/formularios-check -sourcepath "src/main/java;src/test/java" src/test/java/vista/RevisionFormulariosAdjuntos.java
+java -cp target/formularios-check vista.RevisionFormulariosAdjuntos
+```
+
+Comprueba eventos de compra, ranking, consejos, navegacion, permisos y semaforo; guarda capturas en target/revision-formularios-adjuntos. Todas las vistas y contratos referenciados por AplicacionDesktop estan implementados.
+
+Para compilar el proyecto completo y comprobar ventanas, controladores, modelo y servicios sin usar MySQL:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/probar-vistas.ps1
+```
+
+La revision de ventanas guarda capturas en target/revision-ventanas. Las pruebas aisladas sustituyen los servicios de datos cuando comprueban interacciones; no verifican la persistencia JDBC de una instalacion real.
 
 ## Documentacion
 
