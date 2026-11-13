@@ -38,6 +38,29 @@ public final class RevisionNavegacionIntegrada {
         Files.createDirectories(destino);
         ImageIO.write(imagen, "png", destino.resolve(nombre + ".png").toFile());
     }
+    private static JTable primeraTabla(Container padre) {
+        for (Component c : padre.getComponents()) {
+            if (c instanceof JTable t) return t;
+            if (c instanceof Container contenedor) {
+                JTable t = primeraTabla(contenedor);
+                if (t != null) return t;
+            }
+        }
+        return null;
+    }
+    private static void verificarCampos(Container padre) {
+        if (padre.getLayout() instanceof FormularioZeroLoss.Campos) {
+            for (Component c : padre.getComponents()) {
+                verificar(c.getWidth() > 0 && c.getHeight() > 0);
+                verificar(c.getX() >= 0 && c.getY() >= 0);
+                verificar(c.getX() + c.getWidth() <= padre.getWidth() + 1);
+                verificar(c.getY() + c.getHeight() <= padre.getHeight() + 1);
+                if (c instanceof JTextField) verificar(c.getHeight() <= 40);
+            }
+        }
+        for (Component c : padre.getComponents()) if (c.isVisible() && c instanceof Container contenedor)
+            verificarCampos(contenedor);
+    }
     public static void main(String[] args) throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             Usuario admin = new Administrador(1, "Ada", "ada", "hash_prueba", true, LocalDateTime.now());
@@ -49,6 +72,10 @@ public final class RevisionNavegacionIntegrada {
                 Sesion.getInstancia().iniciar(admin);
                 principal.addNotify();
                 principal.validate();
+                java.util.List<Producto> catalogo = new java.util.ArrayList<>();
+                for (int i = 1; i <= 18; i++) catalogo.add(new Producto(i, "Producto de ejemplo " + i,
+                        new java.math.BigDecimal("11500"), new java.math.BigDecimal("7000"), 35, 3));
+                ((FrmVenta)modulos.get(0)).mostrarProductos(catalogo);
                 long visibles = java.util.Arrays.stream(Window.getWindows()).filter(Window::isVisible).count();
                 for (FrmBase modulo : modulos) {
                     Container contenido = modulo.getContentPane();
@@ -56,6 +83,19 @@ public final class RevisionNavegacionIntegrada {
                     verificar(principal.getModuloActual() == modulo);
                     verificar(SwingUtilities.isDescendingFrom(contenido, principal));
                     verificar(!modulo.isVisible() && !modulo.isDisplayable());
+                    principal.setSize(1000, 650);
+                    imagen(principal, modulo.getClass().getSimpleName() + "-compacto");
+                    verificarCampos(principal.getContentPane());
+                    principal.setSize(1600, 950);
+                    imagen(principal, modulo.getClass().getSimpleName() + "-amplio");
+                    verificarCampos(principal.getContentPane());
+                    if (modulo instanceof FrmVenta) {
+                        JTable tabla = primeraTabla(contenido);
+                        verificar(tabla.getParent().getHeight() >= 320);
+                        verificar(tabla.getRowCount() == 18);
+                        verificar(contenido.getWidth() >= (principal.getContentPane().getWidth() - 238) * 0.9);
+                    }
+                    principal.setSize(1150, 700);
                     verificar(java.util.Arrays.stream(Window.getWindows()).filter(Window::isVisible).count() == visibles);
                     principal.mostrarInicio();
                     verificar(principal.getModuloActual() == null);
@@ -66,10 +106,19 @@ public final class RevisionNavegacionIntegrada {
                 venta.campos.getComponents();
                 ((JTextField)((JLabel)venta.campos.getComponent(0)).getLabelFor()).setText("Cafe pendiente");
                 principal.mostrarModulo(venta);
+                verificar(Boolean.TRUE.equals(principal.getBtnVentas().getClientProperty("activo")));
                 principal.mostrarModulo(modulos.get(8));
+                verificar(Boolean.FALSE.equals(principal.getBtnVentas().getClientProperty("activo")));
                 principal.mostrarModulo(venta);
                 verificar(venta.getFiltro().equals("Cafe pendiente"));
+                final int[] nuevas = {0};
+                venta.alAccionar(vista.contratos.AccionVista.NUEVA_VENTA, () -> nuevas[0]++);
+                javax.swing.Action nueva = venta.cuerpo.getActionMap().get("Nueva venta");
+                nueva.actionPerformed(new java.awt.event.ActionEvent(venta, 0, "F2"));
+                verificar(nuevas[0] == 1);
                 venta.setOcupada(true);
+                nueva.actionPerformed(new java.awt.event.ActionEvent(venta, 0, "F2"));
+                verificar(nuevas[0] == 1);
                 verificar(!principal.getBtnVentas().isEnabled());
                 verificar(!boton(principal, "Cerrar sesi" + (char)243 + "n").isEnabled());
                 principal.mostrarInicio();
@@ -106,6 +155,7 @@ public final class RevisionNavegacionIntegrada {
                 imagen(principal, "compras-integrado");
                 boton(principal, "Resumen del d" + (char)237 + "a").doClick();
                 verificar(principal.getModuloActual() == null);
+                verificar(Boolean.TRUE.equals(boton(principal, "Resumen del d" + (char)237 + "a").getClientProperty("activo")));
             } catch (Exception e) { throw new RuntimeException(e); }
             finally {
                 modulos.forEach(FrmBase::cerrar);

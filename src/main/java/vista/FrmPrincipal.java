@@ -10,24 +10,12 @@ import java.util.*;
 /** Menú lateral con permisos del modelo y administración en el escritorio. */
 public class FrmPrincipal extends FrmBase implements VistaPrincipal {
     private static final class PanelDashboard extends JPanel implements Scrollable {
+        @Override protected void paintComponent(Graphics g) { TemaZeroLoss.pintarFondo(g, this, false); }
         public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
         public int getScrollableUnitIncrement(Rectangle r, int o, int d) { return 20; }
         public int getScrollableBlockIncrement(Rectangle r, int o, int d) { return 150; }
         public boolean getScrollableTracksViewportWidth() { return true; }
         public boolean getScrollableTracksViewportHeight() { return getParent() != null && getParent().getHeight() > getPreferredSize().height; }
-    }
-    private static final class PanelModulo extends JPanel implements Scrollable {
-        private final Dimension minimo;
-        PanelModulo(Container contenido, Dimension minimoVentana) {
-            super(new BorderLayout());
-            minimo = new Dimension(Math.max(640, minimoVentana.width - 20), Math.max(460, minimoVentana.height - 50));
-            add(contenido, BorderLayout.CENTER);
-        }
-        public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
-        public int getScrollableUnitIncrement(Rectangle r, int o, int d) { return 20; }
-        public int getScrollableBlockIncrement(Rectangle r, int o, int d) { return 150; }
-        public boolean getScrollableTracksViewportWidth() { return getParent() != null && getParent().getWidth() >= minimo.width; }
-        public boolean getScrollableTracksViewportHeight() { return getParent() != null && getParent().getHeight() >= minimo.height; }
     }
     private final CardLayout distribucion = new CardLayout();
     private final JPanel contenidoCentral = new JPanel(distribucion);
@@ -35,6 +23,8 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
     private FrmBase moduloActual;
     private boolean ocupacionPropia;
     private final JButton btnInicio = new JButton("Resumen del d" + (char)237 + "a");
+    private final JLabel ruta = new JLabel("Resumen del d" + (char)237 + "a");
+    private final JLabel actividad = new JLabel(" ");
     private final JPanel dashboard = new PanelDashboard();
     private final JScrollPane desplazamiento = new JScrollPane(dashboard);
     private final JDesktopPane escritorioPrincipal = new JDesktopPane() {
@@ -42,6 +32,7 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
             contenidoCentral.setBounds(0, 0, getWidth(), getHeight());
         }
     };
+    private final JPanel encabezadoDashboard = new JPanel();
     private final JLabel bienvenida = new JLabel();
     private final JLabel orientacion = new JLabel();
     private final JPanel cifras = new JPanel(new GridLayout(2, 2, 18, 18));
@@ -71,9 +62,11 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
     private Rol rolMostrado;
     private final JLabel notaMeta = new JLabel("Ventas necesarias para cubrir los costos");
     private final JLabel guia = new JLabel();
-    private static final Color TINTA = new Color(28, 43, 65);
-    private static final Color SUAVE = new Color(104, 119, 139);
-    private static final Color LATERAL = new Color(24, 39, 59);
+    private static final Color TINTA = TemaZeroLoss.TINTA;
+    private static final Color SUAVE = TemaZeroLoss.SUAVE;
+    private static final Color LATERAL = TemaZeroLoss.PROFUNDO;
+
+    @Override protected boolean usaTemaFormulario() { return false; }
 
     public FrmPrincipal() { this(null); }
 
@@ -104,14 +97,26 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         construirDashboard();
         construirBarraLateral();
 
-        JPanel superior = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
+        JPanel superior = new JPanel(new BorderLayout(20, 0));
         superior.setBackground(Color.WHITE);
+        superior.setBorder(BorderFactory.createEmptyBorder(12, 24, 12, 24));
+        ruta.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        ruta.setForeground(TINTA);
+        superior.add(ruta, BorderLayout.WEST);
+        JPanel acciones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        acciones.setOpaque(false);
+        actividad.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        actividad.setForeground(TemaZeroLoss.ACENTO);
+        acciones.add(actividad);
         btnActualizar.setText("Actualizar indicadores");
-        JButton cerrarSesion = new JButton("Cerrar sesión");
+        JButton cerrarSesion = new JButton("Cerrar sesi" + (char)243 + "n");
+        TemaZeroLoss.boton(btnActualizar, TemaZeroLoss.TipoBoton.PRINCIPAL);
+        TemaZeroLoss.boton(cerrarSesion, TemaZeroLoss.TipoBoton.SECUNDARIO);
         registrarBoton(AccionVista.ACTUALIZAR, btnActualizar);
         registrarBoton(AccionVista.CERRAR_SESION, cerrarSesion);
-        superior.add(btnActualizar);
-        superior.add(cerrarSesion);
+        acciones.add(btnActualizar);
+        acciones.add(cerrarSesion);
+        superior.add(acciones, BorderLayout.EAST);
         add(superior, BorderLayout.NORTH);
         mostrarUsuario(usuario);
         setMinimumSize(new Dimension(1000, 600));
@@ -125,15 +130,27 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         dashboard.setBackground(new Color(244, 247, 251));
         dashboard.setBorder(BorderFactory.createEmptyBorder(28, 30, 30, 30));
         desplazamiento.setBorder(null);
+        estilizarScroll(desplazamiento, false);
         desplazamiento.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         desplazamiento.getVerticalScrollBar().setUnitIncrement(20);
         bienvenida.setFont(new Font("Segoe UI", Font.BOLD, 27));
         bienvenida.setForeground(TINTA);
         orientacion.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         orientacion.setForeground(SUAVE);
-        bloque(bienvenida);
-        bloque(Box.createVerticalStrut(8));
-        bloque(orientacion);
+        JPanel cabecera = encabezadoDashboard;
+        cabecera.setOpaque(false);
+        cabecera.setLayout(new BoxLayout(cabecera, BoxLayout.Y_AXIS));
+        JLabel fecha = texto(java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern(
+                "EEEE, d 'de' MMMM", java.util.Locale.forLanguageTag("es-CO"))), 12, TemaZeroLoss.ACENTO, true);
+        fecha.setAlignmentX(Component.LEFT_ALIGNMENT);
+        cabecera.add(fecha);
+        cabecera.add(Box.createVerticalStrut(10));
+        bienvenida.setAlignmentX(Component.LEFT_ALIGNMENT);
+        cabecera.add(bienvenida);
+        cabecera.add(Box.createVerticalStrut(8));
+        orientacion.setAlignmentX(Component.LEFT_ALIGNMENT);
+        cabecera.add(orientacion);
+        bloque(cabecera);
         bloque(Box.createVerticalStrut(26));
         cifras.setOpaque(false);
         String[] nombres = {"INGRESOS DEL D\u00cdA", "RESULTADO DEL D\u00cdA", "PUNTO DE EQUILIBRIO", "VENTAS POR ALCANZAR"};
@@ -143,7 +160,7 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         for (int i = 0; i < nombres.length; i++) {
             JPanel tarjeta = tarjeta();
             tarjeta.setLayout(new BorderLayout(0, 14));
-            tarjeta.add(texto(nombres[i], 12, SUAVE, true), BorderLayout.NORTH);
+            tarjeta.add(texto(nombres[i], 12, TemaZeroLoss.ACENTO, true), BorderLayout.NORTH);
             valores[i].setText("\u2014");
             valores[i].setFont(new Font("Segoe UI", Font.BOLD, 25));
             valores[i].setForeground(TINTA);
@@ -171,13 +188,19 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
     }
 
     private void construirBarraLateral() {
-        JPanel lateral = new JPanel();
+        JPanel lateral = TemaZeroLoss.degradado(true);
         lateral.setLayout(new BoxLayout(lateral, BoxLayout.Y_AXIS));
         lateral.setBackground(LATERAL);
         lateral.setBorder(BorderFactory.createEmptyBorder(22, 14, 20, 14));
         JLabel marca = texto("ZeroLoss", 23, Color.WHITE, true);
         marca.setAlignmentX(Component.LEFT_ALIGNMENT);
+        marca.setIcon(new TemaZeroLoss.IconoMarca(38));
+        marca.setIconTextGap(12);
         lateral.add(marca);
+        lateral.add(Box.createVerticalStrut(8));
+        JLabel eslogan = texto("Cada venta cuenta.", 12, new Color(187, 232, 230), false);
+        eslogan.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lateral.add(eslogan);
         lateral.add(Box.createVerticalStrut(10));
         lblUsuario.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblUsuario.setForeground(new Color(185, 199, 218));
@@ -186,6 +209,7 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         lateral.add(Box.createVerticalStrut(26));
         estiloNavegacion(btnInicio);
         btnInicio.setForeground(new Color(116, 204, 207));
+        btnInicio.putClientProperty("activo", Boolean.TRUE);
         btnInicio.addActionListener(e -> mostrarInicio());
         lateral.add(btnInicio);
         lateral.add(Box.createVerticalStrut(20));
@@ -226,25 +250,36 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         scroll.setPreferredSize(new Dimension(238, 0));
         scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.getVerticalScrollBar().setUnitIncrement(20);
+        estilizarScroll(scroll, true);
         add(scroll, BorderLayout.WEST);
     }
 
     private void estiloNavegacion(JButton boton) {
-        boton.putClientProperty("navegacion", Boolean.TRUE);
-        boton.setUI(new javax.swing.plaf.basic.BasicButtonUI());
+        TemaZeroLoss.boton(boton, TemaZeroLoss.TipoBoton.NAVEGACION);
         boton.setHorizontalAlignment(SwingConstants.LEFT);
-        boton.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        boton.setForeground(new Color(224, 232, 243));
-        boton.setBackground(LATERAL);
-        boton.setOpaque(true);
-        boton.setContentAreaFilled(true);
-        boton.setBorderPainted(false);
-        boton.setBorder(BorderFactory.createEmptyBorder(9, 12, 9, 8));
         boton.setPreferredSize(new Dimension(205, 37));
         boton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 37));
         boton.setAlignmentX(Component.LEFT_ALIGNMENT);
-        boton.setFocusPainted(true);
-        boton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    }
+
+    private void estilizarScroll(JScrollPane scroll, boolean oscuro) {
+        scroll.getViewport().setBackground(oscuro ? LATERAL : TemaZeroLoss.FONDO);
+        scroll.getVerticalScrollBar().setPreferredSize(new Dimension(8, 0));
+        scroll.getVerticalScrollBar().setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+            @Override protected void configureScrollBarColors() {
+                thumbColor = oscuro ? new Color(62, 119, 131) : new Color(169, 204, 208);
+                trackColor = oscuro ? LATERAL : TemaZeroLoss.FONDO;
+            }
+            private JButton vacio() {
+                JButton b = new JButton();
+                b.setPreferredSize(new Dimension(0, 0));
+                b.setMinimumSize(new Dimension(0, 0));
+                b.setMaximumSize(new Dimension(0, 0));
+                return b;
+            }
+            @Override protected JButton createDecreaseButton(int orientation) { return vacio(); }
+            @Override protected JButton createIncreaseButton(int orientation) { return vacio(); }
+        });
     }
 
     private JLabel texto(String valor, int tamano, Color color, boolean negrita) {
@@ -254,14 +289,7 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         return label;
     }
 
-    private JPanel tarjeta() {
-        JPanel panel = new JPanel();
-        panel.setBackground(Color.WHITE);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(227, 233, 241)),
-                BorderFactory.createEmptyBorder(22, 24, 22, 24)));
-        return panel;
-    }
+    private JPanel tarjeta() { return TemaZeroLoss.tarjeta(); }
 
     private void bloque(Component componente) {
         if (componente instanceof JComponent jc) jc.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -323,6 +351,8 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         if (rolMostrado != null) {
             for (JLabel valor : new JLabel[]{ingresos, resultado, meta, faltante}) valor.setText("\u2014");
         }
+        ((BoxLayout)encabezadoDashboard.getLayout()).invalidateLayout(encabezadoDashboard);
+        encabezadoDashboard.setMaximumSize(new Dimension(Integer.MAX_VALUE, encabezadoDashboard.getPreferredSize().height));
         administracion.mostrarPermisos(admin ? usuario : null);
         if (!admin) administracion.setVisible(false);
         for (JPanel grupo : new JPanel[]{operaciones, consultas, gestion})
@@ -348,6 +378,7 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
     private void actualizarBloqueo() {
         boolean ocupada = ocupacionPropia || (moduloActual != null && moduloActual.estaOcupada());
         super.setOcupada(ocupada);
+        actividad.setText(ocupada ? "Procesando..." : " ");
         btnInicio.setEnabled(!ocupada);
         btnAdministracion.setEnabled(!ocupada);
         accesosAdmin.forEach(b -> b.setEnabled(!ocupada));
@@ -359,14 +390,16 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         if (moduloActual != null && moduloActual.estaOcupada()) return;
         if (!modulos.containsKey(modulo)) {
             Container contenido = modulo.extraerContenido(this);
-            JScrollPane scroll = new JScrollPane(new PanelModulo(contenido, modulo.getMinimumSize()));
+            JScrollPane scroll = (JScrollPane)contenido;
             scroll.setBorder(null);
+            estilizarScroll(scroll, false);
             scroll.getVerticalScrollBar().setUnitIncrement(20);
             modulos.put(modulo, scroll);
             contenidoCentral.add(scroll, Integer.toString(System.identityHashCode(modulo)));
             modulo.alOcupar(valor -> actualizarBloqueo());
         }
         moduloActual = modulo;
+        actualizarSeleccion();
         distribucion.show(contenidoCentral, Integer.toString(System.identityHashCode(modulo)));
         actualizarBloqueo();
         contenidoCentral.revalidate();
@@ -376,6 +409,7 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
     public void mostrarInicio() {
         if (estaOcupada()) return;
         moduloActual = null;
+        actualizarSeleccion();
         distribucion.show(contenidoCentral, "INICIO");
         actualizarBloqueo();
     }
@@ -386,11 +420,41 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         modulo.alOcupar(valor -> { });
         if (moduloActual == modulo) {
             moduloActual = null;
+            actualizarSeleccion();
             distribucion.show(contenidoCentral, "INICIO");
         }
         actualizarBloqueo();
         contenidoCentral.revalidate();
         contenidoCentral.repaint();
+    }
+
+    private void actualizarSeleccion() {
+        JButton activo = moduloActual == null ? btnInicio
+                : moduloActual instanceof FrmVenta ? btnVentas
+                : moduloActual instanceof FrmCompraGasto ? btnCompras
+                : moduloActual instanceof FrmReportes ? btnReportes
+                : moduloActual instanceof FrmBalance ? btnBalance
+                : moduloActual instanceof FrmMargen ? btnMargen
+                : moduloActual instanceof FrmHistorial ? btnHistorial
+                : moduloActual instanceof FrmModificarVenta ? btnModificarVenta
+                : moduloActual instanceof FrmCierreCaja ? btnCierreCaja
+                : moduloActual instanceof FrmUsuarios ? accesosAdmin.get(0)
+                : moduloActual instanceof FrmProductos ? accesosAdmin.get(1)
+                : moduloActual instanceof FrmCostosFijos ? accesosAdmin.get(2)
+                : moduloActual instanceof FrmConfiguracion ? accesosAdmin.get(3) : null;
+        java.util.List<JButton> botones = new ArrayList<>(permisos.keySet());
+        botones.addAll(accesosAdmin);
+        botones.add(btnInicio);
+        for (JButton b : botones) {
+            b.putClientProperty("activo", b == activo);
+            b.repaint();
+        }
+        if (accesosAdmin.contains(activo)) {
+            gestion.setVisible(true);
+            btnAdministracion.setText("Administraci" + (char)243 + "n  -");
+        }
+        ruta.setText(moduloActual == null ? "Resumen del d" + (char)237 + "a"
+                : moduloActual.getTitle().replace(" - ZeroLoss", ""));
     }
 
     public FrmBase getModuloActual() { return moduloActual; }

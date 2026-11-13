@@ -29,7 +29,7 @@ public final class FrmCompraGasto extends FrmBase implements VistaCompraGasto {
 
     public FrmCompraGasto() {
         super("Registro de Compras y Gastos - ZeroLoss");
-        JTabbedPane pestanas = new JTabbedPane();
+        JTabbedPane pestanas = new FormularioZeroLoss.Pestanas();
         pestanas.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
         JPanel compras = new JPanel(new BorderLayout(10, 10));
         compras.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -59,11 +59,11 @@ public final class FrmCompraGasto extends FrmBase implements VistaCompraGasto {
         compras.add(new JScrollPane(tblLineasCompra), BorderLayout.CENTER);
         JPanel pie = new JPanel(new BorderLayout(5, 8));
         pie.add(total, BorderLayout.NORTH);
-        JPanel acciones = new JPanel(new GridLayout(1, 2, 5, 0));
+        JPanel acciones = new JPanel(new FormularioZeroLoss.Acciones(FlowLayout.RIGHT));
         acciones.add(boton("+ Agregar línea", AccionVista.AGREGAR));
         acciones.add(boton("Cancelar compra", AccionVista.CANCELAR));
-        pie.add(acciones, BorderLayout.CENTER);
-        pie.add(boton("Guardar compra completa", AccionVista.GUARDAR_COMPRA), BorderLayout.SOUTH);
+        acciones.add(boton("Guardar compra completa", AccionVista.GUARDAR_COMPRA));
+        pie.add(acciones, BorderLayout.SOUTH);
         compras.add(pie, BorderLayout.SOUTH);
 
         JPanel gastos = new JPanel(new BorderLayout(10, 15));
@@ -76,24 +76,30 @@ public final class FrmCompraGasto extends FrmBase implements VistaCompraGasto {
         EstiloZeroLoss.campo(campos, "Fecha (día actual):", txtFechaGasto);
         txtFechaGasto.setEditable(false);
         txtFechaGasto.setToolTipText("El servicio asigna la fecha al guardar el gasto.");
-        campos.add(new JLabel(""));
-        campos.add(boton("Guardar gasto", AccionVista.GUARDAR_GASTO));
+
         cbTipoGasto.addActionListener(e -> txtDiasOperacion.setEnabled(esGastoFijo() && !estaOcupada()));
         gastos.add(campos, BorderLayout.NORTH);
-        gastos.add(new JLabel("Los días de operación se utilizan para distribuir el gasto fijo."), BorderLayout.SOUTH);
+        JPanel pieGasto = new JPanel(new BorderLayout(0, 12));
+        pieGasto.add(new JLabel("Los días de operación se utilizan para distribuir el gasto fijo."), BorderLayout.NORTH);
+        JPanel accionesGasto = new JPanel(new FormularioZeroLoss.Acciones(FlowLayout.RIGHT));
+        accionesGasto.add(boton("Guardar gasto", AccionVista.GUARDAR_GASTO));
+        pieGasto.add(accionesGasto, BorderLayout.SOUTH);
+        gastos.add(pieGasto, BorderLayout.SOUTH);
 
         JPanel registros = new JPanel(new BorderLayout(8, 8));
-        JTabbedPane listados = new JTabbedPane();
+        JTabbedPane listados = new FormularioZeroLoss.Pestanas();
         listados.addTab("Compras del día", new JScrollPane(new JTable(comprasDia)));
         listados.addTab("Gastos del día", new JScrollPane(new JTable(gastosDia)));
         registros.add(listados, BorderLayout.CENTER);
-        registros.add(boton("Actualizar registros del día", AccionVista.LISTAR), BorderLayout.SOUTH);
+        JPanel accionesRegistros = new JPanel(new FormularioZeroLoss.Acciones(FlowLayout.RIGHT));
+        accionesRegistros.add(boton("Actualizar registros del día", AccionVista.LISTAR));
+        registros.add(accionesRegistros, BorderLayout.SOUTH);
         pestanas.addTab("Registrar compra", compras);
         pestanas.addTab("Registrar gasto", gastos);
         pestanas.addTab("Registros del día", registros);
         setContentPane(pestanas);
-        setMinimumSize(new Dimension(580, 520));
-        setSize(650, 560);
+        setMinimumSize(new Dimension(740, 560));
+        setSize(920, 650);
         setLocationRelativeTo(null);
     }
 

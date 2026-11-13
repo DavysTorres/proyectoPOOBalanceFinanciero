@@ -19,12 +19,12 @@ public final class FrmAdministracion extends JInternalFrame {
         setSize(600, 400);
         setMinimumSize(new Dimension(500, 320));
         setLayout(new BorderLayout(10, 10));
-        getContentPane().setBackground(new Color(245, 245, 245));
+        getContentPane().setBackground(TemaZeroLoss.FONDO);
         JPanel cabecera = new JPanel();
         cabecera.setBackground(Color.WHITE);
-        cabecera.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, new Color(158, 97, 49)));
+        cabecera.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, TemaZeroLoss.ACENTO));
         JLabel titulo = new JLabel("Módulos Administrativos");
-        titulo.setForeground(new Color(25, 48, 80));
+        titulo.setForeground(TemaZeroLoss.TINTA);
         titulo.setFont(new Font("Segoe UI", Font.BOLD, 22));
         cabecera.add(titulo);
         add(cabecera, BorderLayout.NORTH);

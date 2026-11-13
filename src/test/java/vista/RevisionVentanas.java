@@ -97,7 +97,28 @@ public final class RevisionVentanas {
                 Usuario admin = new Administrador(1, "Ada", "ada", "hash_prueba", true, LocalDateTime.now());
                 Producto producto = new Producto(1, "Cafe", d("10000"), d("6000"), 100, 2);
                 caso("Login e inicializacion tienen formularios reales", () -> {
-                    imagen(new FrmLogin(), "login");
+                    FrmLogin login = new FrmLogin();
+                    try {
+                        JTextField usuarioLogin = (JTextField)((JLabel)componente(login, JLabel.class, "Usuario")).getLabelFor();
+                        JPasswordField claveLogin = (JPasswordField)((JLabel)componente(login, JLabel.class, "Contrase\u00f1a")).getLabelFor();
+                        usuarioLogin.setText("ada");
+                        claveLogin.setText("clave_de_prueba");
+                        componente(login, JButton.class, "Mostrar").doClick();
+                        verificar(claveLogin.getEchoChar() == 0);
+                        verificar(login.getUsername().equals("ada") && java.util.Arrays.equals(login.getContrasena(), "clave_de_prueba".toCharArray()));
+                        login.setOcupada(true);
+                        verificar(!usuarioLogin.isEnabled() && !claveLogin.isEnabled());
+                        verificar(!componente(login, JButton.class, "Ocultar").isEnabled());
+                        login.limpiarContrasena();
+                        verificar(claveLogin.getEchoChar() != 0 && login.getContrasena().length == 0);
+                        login.setOcupada(false);
+                        verificar(usuarioLogin.isEnabled() && claveLogin.isEnabled());
+                        usuarioLogin.setText("");
+                        imagen(login, "login");
+                    } finally { login.cerrar(); }
+                    FrmLogin compacto = new FrmLogin();
+                    compacto.setSize(compacto.getMinimumSize());
+                    imagen(compacto, "login-compacto");
                     imagen(new FrmInicializacion(), "inicializacion");
                 });
                 caso("Menu y semaforo presentan estado y avance", () -> {

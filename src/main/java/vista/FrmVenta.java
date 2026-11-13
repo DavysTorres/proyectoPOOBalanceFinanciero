@@ -17,7 +17,7 @@ public final class FrmVenta extends FrmModulo implements VistaVenta {
     private final DefaultTableModel lineas = EstiloZeroLoss.tabla("Código", "Producto", "Cantidad", "Precio U.", "Subtotal");
     private final JTable tablaProductos = tabla(catalogo);
     private final JTable tablaCarrito = tabla(lineas);
-    private final JTabbedPane pestanas = new JTabbedPane();
+    private final JTabbedPane pestanas = new FormularioZeroLoss.Pestanas();
     private List<Producto> productos = List.of();
     private List<DetalleVenta> detalles = List.of();
     private final JLabel total = new JLabel("Total: —", SwingConstants.RIGHT);
@@ -40,8 +40,18 @@ public final class FrmVenta extends FrmModulo implements VistaVenta {
         accion("Cobrar", AccionVista.COBRAR);
         accion("Cancelar", AccionVista.CANCELAR);
         filtro.addActionListener(e -> buscar.doClick());
-        estado.setText("Pulse Nueva venta para iniciar. Quitar y Reducir utilizan la fila seleccionada del carrito.");
+        estado.setText("F2: nueva venta  |  F3: buscar  |  F4: agregar  |  F8: cobrar. Quitar y Reducir usan la fila del carrito.");
+        atajo("F2", "Nueva venta", AccionVista.NUEVA_VENTA);
+        atajo("F3", "Buscar", AccionVista.BUSCAR);
+        atajo("F4", "Agregar", AccionVista.AGREGAR);
+        atajo("F8", "Cobrar", AccionVista.COBRAR);
         setSize(1050, 650);
+    }
+    private void atajo(String tecla, String nombre, AccionVista accion) {
+        cuerpo.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(tecla), nombre);
+        cuerpo.getActionMap().put(nombre, new AbstractAction() {
+            @Override public void actionPerformed(java.awt.event.ActionEvent e) { accionar(accion); }
+        });
     }
     @Override public String getFiltro() { return leer(filtro); }
     @Override public String getCantidad() { return leer(cantidad); }

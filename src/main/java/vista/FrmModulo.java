@@ -10,8 +10,8 @@ import java.util.*;
 /** Cabecera, campos y acciones comunes de los módulos operativos y administrativos. */
 abstract class FrmModulo extends FrmBase {
     protected final JPanel cuerpo = new JPanel(new BorderLayout(10, 12));
-    protected final JPanel campos = new JPanel(new GridLayout(0, 2, 10, 8));
-    protected final JPanel acciones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
+    protected final JPanel campos = new JPanel(new FormularioZeroLoss.Campos());
+    protected final JPanel acciones = new JPanel(new FormularioZeroLoss.Acciones(FlowLayout.RIGHT));
     protected final JLabel estado = new JLabel(" ");
     private final java.util.List<JComponent> editores = new ArrayList<>();
     private final Map<JComponent, Boolean> habilitados = new IdentityHashMap<>();
@@ -32,14 +32,19 @@ abstract class FrmModulo extends FrmBase {
         label.setFont(new Font("Segoe UI", Font.BOLD, 22));
         label.setForeground(new Color(25, 48, 80));
         cabecera.add(label, BorderLayout.CENTER);
-        cabecera.add(new JLabel(descripcion), BorderLayout.SOUTH);
-        cabecera.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(158, 97, 49)));
+        JLabel ayuda = new JLabel("<html>" + descripcion + "</html>");
+        ayuda.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        ayuda.setForeground(TemaZeroLoss.SUAVE);
+        cabecera.add(ayuda, BorderLayout.SOUTH);
+        cabecera.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, TemaZeroLoss.ACENTO));
         cuerpo.setOpaque(false);
         campos.setOpaque(false);
         acciones.setOpaque(false);
         cuerpo.add(campos, BorderLayout.NORTH);
         JPanel pie = new JPanel(new BorderLayout(5, 5));
         pie.setOpaque(false);
+        estado.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        estado.setForeground(TemaZeroLoss.SUAVE);
         pie.add(estado, BorderLayout.NORTH);
         pie.add(acciones, BorderLayout.SOUTH);
         principal.add(cabecera, BorderLayout.NORTH);
@@ -50,6 +55,8 @@ abstract class FrmModulo extends FrmBase {
         setSize(850, 640);
         setLocationRelativeTo(null);
     }
+
+    protected final void ocultarVolver() { volver.setVisible(false); }
 
     protected final <T extends JComponent> T campo(String etiqueta, T editor) {
         EstiloZeroLoss.campo(campos, etiqueta, editor);

@@ -43,7 +43,7 @@ public class FrmBalance extends FrmBase implements VistaBalance {
         btnVolver.setToolTipText("Volver al menú");
         btnVolver.getAccessibleContext().setAccessibleName("Volver al menú");
         btnVolver.addActionListener(e -> solicitarCierre());
-        titulo.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+        titulo.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 22));
         actualizarTitulo(LocalDate.now());
         barra.add(btnVolver, BorderLayout.WEST);
         barra.add(titulo, BorderLayout.CENTER);
@@ -61,12 +61,16 @@ public class FrmBalance extends FrmBase implements VistaBalance {
         consulta.add(consultar);
         cabecera.add(consulta, BorderLayout.SOUTH);
 
-        JPanel datos = blanco(new GridLayout(7, 2, 10, 12));
+        JPanel datos = blanco(new GridLayout(0, 2, 18, 18) {
+            private void adaptar(Container p) { setColumns(p.getWidth() >= 1100 ? 4 : p.getWidth() >= 820 ? 3 : 2); }
+            @Override public Dimension preferredLayoutSize(Container p) { adaptar(p); return super.preferredLayoutSize(p); }
+            @Override public void layoutContainer(Container p) { adaptar(p); super.layoutContainer(p); }
+        });
         fila(datos, "Ingresos por ventas:", lblIngresos, false);
         fila(datos, "Costos variables:", lblCostosVariables, false);
         fila(datos, "Margen de contribución:", lblMargenContribucion, true);
         fila(datos, "Costos fijos del día:", lblCostosFijos, false);
-        JPanel resultado = blanco(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        JPanel resultado = blanco(new FlowLayout(FlowLayout.LEFT, 5, 0));
         resultado.add(lblResultado);
         resultado.add(indicador);
         fila(datos, "Resultado del día:", resultado, true);
@@ -77,16 +81,18 @@ public class FrmBalance extends FrmBase implements VistaBalance {
         nota.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
         pie.add(nota, BorderLayout.NORTH);
         btnExportar.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
-        btnExportar.setPreferredSize(new Dimension(0, 45));
+
         btnExportar.setFocusPainted(false);
         registrarBoton(AccionVista.EXPORTAR, btnExportar);
-        pie.add(btnExportar, BorderLayout.SOUTH);
+        JPanel acciones = blanco(new FormularioZeroLoss.Acciones(FlowLayout.RIGHT));
+        acciones.add(btnExportar);
+        pie.add(acciones, BorderLayout.SOUTH);
         principal.add(cabecera, BorderLayout.NORTH);
         principal.add(datos, BorderLayout.CENTER);
         principal.add(pie, BorderLayout.SOUTH);
         setContentPane(principal);
         mostrarBalance(null);
-        setMinimumSize(new Dimension(460, 520));
+        setMinimumSize(new Dimension(720, 540));
         setSize(480, 540);
         setLocationRelativeTo(null);
     }
@@ -106,8 +112,14 @@ public class FrmBalance extends FrmBase implements VistaBalance {
     private static void fila(JPanel panel, String texto, JComponent valor, boolean negrita) {
         JLabel etiqueta = new JLabel(texto);
         etiqueta.setFont(new Font(Font.SANS_SERIF, negrita ? Font.BOLD : Font.PLAIN, 14));
-        panel.add(etiqueta);
-        panel.add(valor);
+        JPanel tarjeta = TemaZeroLoss.tarjeta();
+        tarjeta.setLayout(new BorderLayout(0, 10));
+        etiqueta.setForeground(TemaZeroLoss.SUAVE);
+        tarjeta.add(etiqueta, BorderLayout.NORTH);
+        valor.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        if (valor instanceof JLabel label) label.setHorizontalAlignment(SwingConstants.LEFT);
+        tarjeta.add(valor, BorderLayout.CENTER);
+        panel.add(tarjeta);
     }
 
     private void actualizarTitulo(LocalDate dia) {
