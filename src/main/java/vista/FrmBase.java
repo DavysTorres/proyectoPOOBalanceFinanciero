@@ -29,6 +29,11 @@ public abstract class FrmBase extends JFrame implements VistaBase {
         });
     }
 
+    @Override public void setMinimumSize(java.awt.Dimension minimo) {
+        super.setMinimumSize(minimo == null ? null : new java.awt.Dimension(
+                Math.min(minimo.width, 360), Math.min(minimo.height, 320)));
+    }
+
     protected final void registrarBoton(AccionVista accion, JButton boton) {
         if (botones.putIfAbsent(accion, boton) != null)
             throw new IllegalArgumentException("Accion ya registrada: " + accion);

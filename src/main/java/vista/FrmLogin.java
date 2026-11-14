@@ -39,12 +39,15 @@ public final class FrmLogin extends FrmBase implements VistaLogin {
             }
         };
         tarjeta.setOpaque(false);
-        tarjeta.add(crearMarca());
+        JPanel marca = crearMarca();
+        tarjeta.add(marca);
         tarjeta.add(crearFormulario());
         JPanel fondo = new JPanel(null) {
             @Override public void doLayout() {
-                int ancho = Math.min(1040, getWidth() - 64);
-                int alto = Math.min(570, getHeight() - 64);
+                int ancho = Math.max(280, Math.min(1040, getWidth() - 24));
+                int alto = Math.max(530, Math.min(570, getHeight() - 24));
+                if (ancho < 760 && marca.getParent() == tarjeta) tarjeta.remove(marca);
+                else if (ancho >= 760 && marca.getParent() != tarjeta) tarjeta.add(marca, 0);
                 tarjeta.setBounds((getWidth() - ancho) / 2, (getHeight() - alto) / 2, ancho, alto);
             }
             @Override protected void paintComponent(Graphics g) {
@@ -62,8 +65,12 @@ public final class FrmLogin extends FrmBase implements VistaLogin {
                 g2.dispose();
             }
         };
+        fondo.setPreferredSize(new Dimension(320, 554));
         fondo.add(tarjeta);
-        setContentPane(fondo);
+        JScrollPane scroll = new JScrollPane(fondo);
+        scroll.setBorder(null);
+        scroll.getVerticalScrollBar().setUnitIncrement(24);
+        setContentPane(scroll);
         getRootPane().setDefaultButton(ingresar);
         usuario.addActionListener(e -> contrasena.requestFocusInWindow());
         addWindowListener(new WindowAdapter() {

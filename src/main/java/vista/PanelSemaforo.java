@@ -44,6 +44,13 @@ public final class PanelSemaforo extends JPanel {
         add(barraProgreso, BorderLayout.SOUTH);
     }
 
+    public void sinDatos(String mensaje) {
+        lblIndicadorColor.setForeground(Color.LIGHT_GRAY);
+        lblMensaje.setText(mensaje);
+        barraProgreso.setValue(0);
+        barraProgreso.setString("Sin datos");
+    }
+
     public void actualizarEstado(Color color, String mensaje, int porcentaje) {
         lblIndicadorColor.setForeground(color);
         barraProgreso.setForeground(color);

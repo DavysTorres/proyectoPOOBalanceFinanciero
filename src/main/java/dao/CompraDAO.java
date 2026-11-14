@@ -50,9 +50,10 @@ public class CompraDAO extends DAOBase<Compra> {
                     c.getUsuario().getId(), c.getProveedor(), c.getFechaHora(), c.calcularTotal());
             for (DetalleCompra d : c.getDetalles()) {
                 idValido(d.getProducto().getId());
-                // Se comprueba el limite int para no desbordar las existencias.
-                exigirCambio(ejecutar("UPDATE productos SET stock=stock+?,costo_compra=? WHERE id=? AND stock<=?",
-                        d.getCantidad(), d.getCostoUnitario(), d.getProducto().getId(), Integer.MAX_VALUE - d.getCantidad()));
+                // Promedio ponderado perpetuo: el nuevo lote no revaloriza todo al ultimo precio.
+                // MySQL evalua las asignaciones en orden: calcular antes de aumentar stock.
+                exigirCambio(ejecutar("UPDATE productos SET costo_compra=ROUND((stock*costo_compra+?*?)/(stock+?),4),stock=stock+? WHERE id=? AND stock<=?",
+                        d.getCantidad(), d.getCostoUnitario(), d.getCantidad(), d.getCantidad(), d.getProducto().getId(), Integer.MAX_VALUE - d.getCantidad()));
                 insertar("INSERT INTO detalle_compra(compra_id,producto_id,cantidad,costo_unitario) VALUES (?,?,?,?)",
                         generado, d.getProducto().getId(), d.getCantidad(), d.getCostoUnitario());
             }

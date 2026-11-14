@@ -11,7 +11,7 @@ public class Diagnostico {
     // No se confunde una meta imposible con una meta cero ya cubierta.
     public EstadoNegocio evaluar(BalanceDia balance, Negocio negocio) {
         if (!balance.isPuntoEquilibrioCalculable()) return new EstadoRojo();
-        if (balance.getIngresos().compareTo(balance.getPuntoEquilibrio()) >= 0) return new EstadoVerde();
+        if (balance.getIngresos().signum() > 0 && balance.getResultado().signum() >= 0) return new EstadoVerde();
         if (balance.getPorcentajeAvance().compareTo(negocio.getUmbralAmarillo()) >= 0) return new EstadoAmarillo();
         return new EstadoRojo();
     }

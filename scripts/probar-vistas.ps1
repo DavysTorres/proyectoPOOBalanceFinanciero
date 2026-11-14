@@ -1,4 +1,4 @@
-# Compila todas las fuentes y ejecuta solamente pruebas locales, sin MySQL.
+﻿# Compila todas las fuentes y ejecuta solamente pruebas locales, sin MySQL.
 $ErrorActionPreference = 'Stop'
 $raiz = Split-Path -Parent $PSScriptRoot
 $salida = Join-Path $raiz 'target/formularios-completos'
@@ -8,7 +8,7 @@ $fuentes = @(Get-ChildItem (Join-Path $raiz 'src/main/java'),(Join-Path $raiz 's
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Push-Location $raiz
 try {
-    foreach ($prueba in @('modelo.RevisionModelo','servicio.RevisionServicio','controlador.RevisionControlador','vista.RevisionVentanas','vista.RevisionFormulariosAdjuntos','vista.RevisionNavegacionIntegrada')) {
+    foreach ($prueba in @('modelo.RevisionModelo','servicio.RevisionServicio','servicio.RevisionEquilibrio','controlador.RevisionControlador','vista.RevisionVentanas','vista.RevisionResponsiva','vista.RevisionFormulariosAdjuntos','vista.RevisionNavegacionIntegrada')) {
         $log = Join-Path $salida ($prueba + '.log')
         & java -Xmx128m -cp $salida $prueba *> $log
         if ($LASTEXITCODE -ne 0) {

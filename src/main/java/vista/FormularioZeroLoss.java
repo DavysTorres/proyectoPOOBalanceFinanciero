@@ -174,6 +174,24 @@ final class FormularioZeroLoss {
         }
     }
 
+    /** Tarjetas que pasan a una columna en espacios estrechos. */
+    static final class Rejilla extends GridLayout {
+        private final int anchoColumna;
+        private final int maximoColumnas;
+        Rejilla(int anchoColumna, int maximoColumnas, int espacio) {
+            super(0, maximoColumnas, espacio, espacio);
+            this.anchoColumna = anchoColumna;
+            this.maximoColumnas = maximoColumnas;
+        }
+        private void adaptar(Container p) {
+            Insets i = p.getInsets();
+            int ancho = p.getWidth() > 0 ? p.getWidth() - i.left - i.right : 760;
+            setColumns(Math.max(1, Math.min(maximoColumnas, (ancho + getHgap()) / (anchoColumna + getHgap()))));
+        }
+        @Override public Dimension preferredLayoutSize(Container p) { adaptar(p); return super.preferredLayoutSize(p); }
+        @Override public void layoutContainer(Container p) { adaptar(p); super.layoutContainer(p); }
+    }
+
     /** Conserva los pares etiqueta/editor y distribuye hasta tres columnas segun el ancho disponible. */
     static final class Campos implements LayoutManager {
         public void addLayoutComponent(String nombre, Component c) { }
@@ -190,7 +208,7 @@ final class FormularioZeroLoss {
                 int indice = (fila * columnas + col) * 2 + 1;
                 if (indice < p.getComponentCount()) alto = Math.max(alto, altoEditor(p.getComponent(indice)));
             }
-            return alto + (columnas > 1 ? 24 : 0);
+            return alto + 24;
         }
         public Dimension preferredLayoutSize(Container p) {
             Insets i = p.getInsets();
@@ -199,7 +217,7 @@ final class FormularioZeroLoss {
             for (int fila = 0; fila < filas; fila++) alto += altoFila(p, fila, col) + (fila == 0 ? 0 : 12);
             return new Dimension(760 + i.left + i.right, alto);
         }
-        public Dimension minimumLayoutSize(Container p) { return new Dimension(400, preferredLayoutSize(p).height); }
+        public Dimension minimumLayoutSize(Container p) { return new Dimension(240, preferredLayoutSize(p).height); }
         public void layoutContainer(Container p) {
             Insets i = p.getInsets();
             int col = Math.max(1, columnas(p)), ancho = p.getWidth() - i.left - i.right;
@@ -212,13 +230,10 @@ final class FormularioZeroLoss {
                     if (n >= p.getComponentCount()) break;
                     Component label = p.getComponent(n);
                     int x = i.left + c * (celda + 24);
-                    if (col > 1) label.setBounds(x, y, celda, 20);
-                    else label.setBounds(x, y, Math.min(285, celda * 45 / 100), alto);
+                    label.setBounds(x, y, celda, 20);
                     if (n + 1 < p.getComponentCount()) {
                         Component editor = p.getComponent(n + 1);
-                        int etiqueta = Math.min(285, celda * 45 / 100);
-                        editor.setBounds(col > 1 ? x : x + etiqueta + 12, col > 1 ? y + 24 : y,
-                                Math.max(0, col > 1 ? celda : celda - etiqueta - 12), altoEditor(editor));
+                        editor.setBounds(x, y + 24, celda, altoEditor(editor));
                     }
                 }
                 y += alto + 12;
@@ -235,7 +250,7 @@ final class FormularioZeroLoss {
             int x = 0, fila = 0, alto = 0, max = 0;
             for (Component c : p.getComponents()) if (c.isVisible()) {
                 Dimension d = c.getPreferredSize();
-                if (x > 0 && x + d.width + 8 > limite - i.left - i.right) {
+                if (x > 0 && x + d.width + 8 > limite - i.left - i.right - getHgap() * 2) {
                     max = Math.max(max, x); alto += fila + 6; x = 0; fila = 0;
                 }
                 x += d.width + 8; fila = Math.max(fila, d.height);
@@ -248,7 +263,7 @@ final class FormularioZeroLoss {
     private static final class Lienzo extends JPanel implements Scrollable {
         private final JPanel tarjeta;
         Lienzo(JPanel tarjeta) { super(null); this.tarjeta = tarjeta; add(tarjeta); }
-        private int ancho() { return Math.max(400, (getWidth() > 0 ? getWidth() : 850) - 32); }
+        private int ancho() { return Math.max(240, (getWidth() > 0 ? getWidth() : 850) - 32); }
         private void distribuir(Container c) {
             c.doLayout();
             for (Component hijo : c.getComponents()) if (hijo instanceof Container contenedor) distribuir(contenedor);
@@ -262,7 +277,7 @@ final class FormularioZeroLoss {
             int disponible = getParent() instanceof JViewport viewport ? viewport.getExtentSize().height - 32 : 0;
             // BorderLayout entrega a tablas y listas el sobrante, sin agrandar los campos ni los botones.
             if (tieneRegistros(tarjeta)) {
-                int minimo = Math.max(280, preferido - 64);
+                int minimo = Math.max(280, preferido);
                 return Math.max(minimo, disponible);
             }
             return preferido;
@@ -289,7 +304,7 @@ final class FormularioZeroLoss {
         public Dimension getPreferredScrollableViewportSize() { return new Dimension(850, 600); }
         public int getScrollableUnitIncrement(Rectangle r, int o, int d) { return 24; }
         public int getScrollableBlockIncrement(Rectangle r, int o, int d) { return 180; }
-        public boolean getScrollableTracksViewportWidth() { return getParent() != null && getParent().getWidth() >= 440; }
+        public boolean getScrollableTracksViewportWidth() { return getParent() != null && getParent().getWidth() >= 272; }
         public boolean getScrollableTracksViewportHeight() { return getParent() != null && getParent().getHeight() >= getPreferredSize().height; }
     }
 }

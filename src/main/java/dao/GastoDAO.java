@@ -50,6 +50,14 @@ public class GastoDAO extends DAOBase<Gasto> {
         return consultar("SELECT * FROM gastos WHERE fecha=? ORDER BY id", Objects.requireNonNull(fecha));
     }
 
+    // Los gastos FIJO son mensuales: se devengan en cada jornada del mes imputado,
+    // aunque el desembolso de caja ocurra una sola vez.
+    public List<Gasto> listarFijosDelMes(LocalDate fecha) {
+        LocalDate inicio = Objects.requireNonNull(fecha).withDayOfMonth(1);
+        return consultar("SELECT * FROM gastos WHERE tipo='FIJO' AND fecha>=? AND fecha<? ORDER BY id",
+                inicio, inicio.plusMonths(1));
+    }
+
     public Gasto buscarPorId(int id) {
         idValido(id);
         return uno("SELECT * FROM gastos WHERE id=?", id);

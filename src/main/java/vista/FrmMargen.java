@@ -33,7 +33,7 @@ public final class FrmMargen extends FrmBase implements VistaMargen {
         titulo.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 22));
         cabecera.add(titulo, BorderLayout.CENTER);
         principal.add(cabecera, BorderLayout.NORTH);
-        JPanel contenido = new JPanel(new GridLayout(1, 2, 18, 0));
+        JPanel contenido = new JPanel(new FormularioZeroLoss.Rejilla(320, 2, 18));
         contenido.setOpaque(false);
         contenido.add(seccion("Los que MÁS te dejan:", new Color(0, 128, 0), listaMas));
         contenido.add(seccion("Los de MENOR margen:", new Color(185, 28, 28), listaMenos));

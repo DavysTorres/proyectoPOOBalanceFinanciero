@@ -151,6 +151,15 @@ public final class RevisionFormulariosAdjuntos {
                 principal.mostrarResumenSemaforo(new ResumenSemaforo(new EstadoRojo(), "No hay margen positivo.", BigDecimal.ZERO, false));
                 verificar(componentes(principal.getPanelSemaforo(), JProgressBar.class).get(0).getString().equals("No calculable"));
                 imagen(principal, "principal-cajero");
+                principal.mostrarUsuario(admin);
+                principal.mostrarBalanceDashboard(new BalanceDia(LocalDate.now(), new BigDecimal("123456"),
+                        BigDecimal.ZERO, new BigDecimal("123456"), BigDecimal.ZERO,
+                        new BigDecimal("123456"), BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("100")));
+                principal.iniciarCargaResumen();
+                verificar(componentes(principal, JLabel.class).stream().noneMatch(l ->
+                        util.FormatoMoneda.mostrar(new BigDecimal("123456")).equals(l.getText())));
+                principal.mostrarFalloResumen();
+                verificar(componentes(principal.getPanelSemaforo(), JProgressBar.class).get(0).getString().equals("Sin datos"));
                 System.out.println("OK: compras, gastos, ranking, consejos, navegación, administración, permisos y semáforo");
             } catch (Exception e) { throw new RuntimeException(e); }
             finally {

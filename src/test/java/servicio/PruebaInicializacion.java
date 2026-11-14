@@ -5,7 +5,6 @@ import modelo.*;
 import excepciones.AccesoDatosException;
 import soporte.BaseTemporal;
 
-import java.math.BigDecimal;
 import java.time.*;
 
 /**
@@ -43,25 +42,17 @@ public final class PruebaInicializacion {
             System.out.println("OK: Primer uso no se repite si existen usuarios");
         });
         Sesion.getInstancia().cerrar();
-        BaseTemporal.ejecutar("balance_ejemplo_prueba_", (c, nombre) -> {
-            String script = java.nio.file.Files.readString(java.nio.file.Path.of("sql/datos_ejemplo.sql")).replaceAll("(?m)^--.*$", "");
-            for (String sentencia : script.split(";"))
-                if (!sentencia.isBlank())
-                    try (java.sql.Statement s = c.createStatement()) {
-                        s.execute(sentencia);
-                    }
-            if (new ProductoDAO(c).listarTodos().size() != 15 || new UsuarioDAO(c).listarTodos().size() != 3)
-                throw new AssertionError();
-            if (new CostoFijoDAO(c).listarActivos().size() != 3) throw new AssertionError();
-            ServicioAutenticacion auth = new ServicioAutenticacion(new UsuarioDAO(c), Clock.systemDefaultZone());
-            if (auth.iniciarSesion("demo_admin", "DemoPoo2026!").getRol() != Rol.ADMINISTRADOR)
-                throw new AssertionError();
-            if (new VentaDAO(c).sumarIngresosPorFecha(LocalDate.of(2026, 11, 5)).compareTo(new BigDecimal("30000")) != 0)
-                throw new AssertionError();
-            if (new VentaDAO(c).listarPorFecha(LocalDate.of(2026, 11, 6)).size() != 1) throw new AssertionError();
-            System.out.println("OK: Datos de ejemplo incluyen roles, 15 productos, costos y dos dias con ventas");
+        BaseTemporal.ejecutar("balance_vacio_prueba_", (c, nombre) -> {
+            for (String tabla : new String[]{"usuarios", "productos", "ventas", "compras", "gastos", "costos_fijos", "cierres_diarios", "configuracion"}) {
+                try (java.sql.Statement consulta = c.createStatement();
+                     java.sql.ResultSet filas = consulta.executeQuery("SELECT COUNT(*) FROM " + tabla)) {
+                    filas.next();
+                    if (filas.getInt(1) != 0) throw new AssertionError("La instalacion contiene datos de fabrica: " + tabla);
+                }
+            }
+            System.out.println("OK: Instalacion vacia sin datos financieros ni usuarios de fabrica");
         });
         Sesion.getInstancia().cerrar();
-        System.out.println("RESULTADO INICIALIZACION Y EJEMPLO: 4 correctas");
+        System.out.println("RESULTADO INICIALIZACION SIN DATOS DE FABRICA: 4 correctas");
     }
 }

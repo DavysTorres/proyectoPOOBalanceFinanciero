@@ -164,7 +164,7 @@ public class PruebaDAO {
             CompraDAO d = new CompraDAO(c);
             d.guardarConDetalles(compra);
             verificar(new ProductoDAO(c).buscarPorId(producto.getId()).getStock() == 21);
-            monto("7000", new ProductoDAO(c).buscarPorId(producto.getId()).getCostoCompra());
+            monto("6142.8571", new ProductoDAO(c).buscarPorId(producto.getId()).getCostoCompra());
             monto("21000", d.buscarPorId(compra.getId()).getTotal());
             verificar(d.listarPorFecha(FECHA).size() == 1);
         });

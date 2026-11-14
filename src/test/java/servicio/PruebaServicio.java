@@ -129,7 +129,7 @@ public final class PruebaServicio {
             monto("510000", b.getCostosVariables());
             monto("975000", b.getPuntoEquilibrio());
             monto("-50000", b.getResultado());
-            verificar(b.isPuntoEquilibrioCalculable() && !b.isPuntoEquilibrioEstimado());
+            verificar(b.isPuntoEquilibrioCalculable() && b.isPuntoEquilibrioEstimado());
             verificar(new Diagnostico().evaluar(b, new ConfiguracionDAO(c).cargarNegocio()) instanceof EstadoAmarillo);
         });
         caso("Carrito no se puede cobrar desde otra sesion", () -> {
@@ -212,11 +212,11 @@ public final class PruebaServicio {
             como(admin);
             servicios.getProductos().editarProducto(producto.getId(), "Cafe", d("10000"), d("6000"), 2);
         });
-        caso("Dia sin ventas usa margen estimado sin dividir entre cero", () -> {
+        caso("Dia sin ventas no inventa una meta a partir del catalogo", () -> {
             como(jefe);
             BalanceDia b = servicios.getBalance().obtenerBalanceDelDia(FECHA.minusDays(1));
-            verificar(b.isPuntoEquilibrioCalculable() && b.isPuntoEquilibrioEstimado());
-            monto("975000", b.getPuntoEquilibrio());
+            verificar(!b.isPuntoEquilibrioCalculable() && !b.isPuntoEquilibrioEstimado());
+            monto("0", b.getPuntoEquilibrio());
             monto("0", b.getIngresos());
         });
         caso("Sin catalogo positivo la meta no es calculable y el estado es rojo", () -> {

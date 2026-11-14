@@ -35,11 +35,16 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
     private final JPanel encabezadoDashboard = new JPanel();
     private final JLabel bienvenida = new JLabel();
     private final JLabel orientacion = new JLabel();
-    private final JPanel cifras = new JPanel(new GridLayout(2, 2, 18, 18));
+    private final JPanel cifras = new JPanel(new FormularioZeroLoss.Rejilla(290, 2, 18)) {
+        @Override public Dimension getMaximumSize() { return new Dimension(Integer.MAX_VALUE, getPreferredSize().height); }
+    };
     private final JLabel ingresos = new JLabel("Pendiente de actualizar");
     private final JLabel resultado = new JLabel("Pendiente de actualizar");
     private final JLabel meta = new JLabel("Pendiente de actualizar");
     private final JLabel faltante = new JLabel("Pendiente de actualizar");
+    private final JLabel costosVariables = new JLabel("Pendiente de actualizar");
+    private final JLabel costosFijos = new JLabel("Pendiente de actualizar");
+    private final JLabel margenContribucion = new JLabel("Pendiente de actualizar");
     private final JLabel fechaDatos = new JLabel("Actualice para consultar la jornada.");
     private final JPanel operaciones = new JPanel(new GridLayout(0, 1, 0, 4));
     private final JPanel consultas = new JPanel(new GridLayout(0, 1, 0, 4));
@@ -103,7 +108,7 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         ruta.setFont(new Font("Segoe UI", Font.BOLD, 14));
         ruta.setForeground(TINTA);
         superior.add(ruta, BorderLayout.WEST);
-        JPanel acciones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        JPanel acciones = new JPanel(new FormularioZeroLoss.Acciones(FlowLayout.RIGHT));
         acciones.setOpaque(false);
         actividad.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         actividad.setForeground(TemaZeroLoss.ACENTO);
@@ -116,7 +121,7 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         registrarBoton(AccionVista.CERRAR_SESION, cerrarSesion);
         acciones.add(btnActualizar);
         acciones.add(cerrarSesion);
-        superior.add(acciones, BorderLayout.EAST);
+        superior.add(acciones, BorderLayout.CENTER);
         add(superior, BorderLayout.NORTH);
         mostrarUsuario(usuario);
         setMinimumSize(new Dimension(1000, 600));
@@ -153,14 +158,14 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         bloque(cabecera);
         bloque(Box.createVerticalStrut(26));
         cifras.setOpaque(false);
-        String[] nombres = {"INGRESOS DEL D\u00cdA", "RESULTADO DEL D\u00cdA", "PUNTO DE EQUILIBRIO", "VENTAS POR ALCANZAR"};
+        String[] nombres = {"INGRESOS DEL D\u00cdA", "RESULTADO REGISTRADO", "META ESTIMADA DE VENTAS", "VENTAS ADICIONALES ESTIMADAS", "COSTO VENDIDO Y OTROS GASTOS VARIABLES", "COSTOS FIJOS DEL D\u00cdA", "MARGEN PARA CUBRIR COSTOS FIJOS"};
         String[] ayudas = {"Total de ventas registradas", "Margen menos costos fijos del d\u00eda",
-                "Ventas necesarias para cubrir los costos", "Importe pendiente para alcanzar el equilibrio"};
-        JLabel[] valores = {ingresos, resultado, meta, faltante};
+                "Ventas necesarias para cubrir los costos", "Importe pendiente para alcanzar el equilibrio", "Productos vendidos y gastos variables registrados", "Cuota diaria de los costos mensuales registrados", "Ventas menos costo vendido y gastos variables"};
+        JLabel[] valores = {ingresos, resultado, meta, faltante, costosVariables, costosFijos, margenContribucion};
         for (int i = 0; i < nombres.length; i++) {
             JPanel tarjeta = tarjeta();
             tarjeta.setLayout(new BorderLayout(0, 14));
-            tarjeta.add(texto(nombres[i], 12, TemaZeroLoss.ACENTO, true), BorderLayout.NORTH);
+            tarjeta.add(texto("<html>" + nombres[i] + "</html>", 12, TemaZeroLoss.ACENTO, true), BorderLayout.NORTH);
             valores[i].setText("\u2014");
             valores[i].setFont(new Font("Segoe UI", Font.BOLD, 25));
             valores[i].setForeground(TINTA);
@@ -252,6 +257,20 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         scroll.getVerticalScrollBar().setUnitIncrement(20);
         estilizarScroll(scroll, true);
         add(scroll, BorderLayout.WEST);
+        JButton menu = new JButton("Men\u00fa");
+        menu.addActionListener(e -> { scroll.setVisible(!scroll.isVisible()); revalidate(); });
+        JPanel barraMenu = new JPanel(new BorderLayout());
+        barraMenu.add(menu, BorderLayout.WEST);
+        add(barraMenu, BorderLayout.SOUTH);
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override public void componentResized(java.awt.event.ComponentEvent e) {
+                boolean compacto = getWidth() < 900;
+                scroll.setVisible(!compacto);
+                barraMenu.setVisible(compacto);
+                revalidate();
+            }
+        });
+        barraMenu.setVisible(false);
     }
 
     private void estiloNavegacion(JButton boton) {
@@ -299,15 +318,28 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
     }
 
     @Override public void mostrarBalanceDashboard(BalanceDia balance) {
-        if (!cifras.isVisible() || balance == null) return;
+        if (balance == null) {
+            for (JLabel valor : new JLabel[]{ingresos, resultado, meta, faltante, costosVariables, costosFijos, margenContribucion}) valor.setText("\u2014");
+            return;
+        }
+        if (!cifras.isVisible()) return;
+        costosVariables.setText(util.FormatoMoneda.mostrar(balance.getCostosVariables()));
+        costosFijos.setText(util.FormatoMoneda.mostrar(balance.getCostosFijosDia()));
+        margenContribucion.setText(util.FormatoMoneda.mostrar(balance.getMargenContribucion()));
         ingresos.setText(util.FormatoMoneda.mostrar(balance.getIngresos()));
         resultado.setText(util.FormatoMoneda.mostrar(balance.getResultado()));
         resultado.setForeground(balance.getResultado().signum() < 0 ? new Color(185, 28, 28) : new Color(21, 128, 61));
         meta.setText(!balance.isPuntoEquilibrioCalculable() ? "No calculable"
                 : util.FormatoMoneda.mostrar(balance.getPuntoEquilibrio()));
-        notaMeta.setText(balance.isPuntoEquilibrioEstimado() ? "Meta estimada con el cat\u00e1logo actual"
+        notaMeta.setText(balance.isPuntoEquilibrioEstimado() ? "<html>Estimaci\u00f3n seg\u00fan el margen de hoy; cambiar\u00e1 si cambian ventas o gastos.</html>"
                 : "Ventas necesarias para cubrir los costos");
         faltante.setText(balance.isPuntoEquilibrioCalculable() ? util.FormatoMoneda.mostrar(balance.getFaltante()) : "No calculable");
+        guia.setText("<html>Resultado seg\u00fan costos y gastos registrados. Las compras reponen inventario; "
+                + "su pago afecta la caja y su costo se reconoce al vender. Sin ventas con margen positivo, "
+                + "no se estima una meta. Cubrir costos no equivale a obtener una utilidad objetivo.</html>");
+        notaMeta.setText(!balance.isPuntoEquilibrioCalculable()
+                ? "<html>Sin ventas o sin margen positivo para estimar.</html>" : notaMeta.getText());
+
     }
 
     private void registrar(JButton boton, AccionVista accion, Permiso permiso) {
@@ -349,7 +381,7 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
                 : financiero ? "Supervisa los resultados y organiza las operaciones del d\u00eda."
                 : "Registra las ventas y consulta c\u00f3mo avanza el negocio hoy.");
         if (rolMostrado != null) {
-            for (JLabel valor : new JLabel[]{ingresos, resultado, meta, faltante}) valor.setText("\u2014");
+            for (JLabel valor : new JLabel[]{ingresos, resultado, meta, faltante, costosVariables, costosFijos, margenContribucion}) valor.setText("\u2014");
         }
         ((BoxLayout)encabezadoDashboard.getLayout()).invalidateLayout(encabezadoDashboard);
         encabezadoDashboard.setMaximumSize(new Dimension(Integer.MAX_VALUE, encabezadoDashboard.getPreferredSize().height));
@@ -359,6 +391,18 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
             grupo.setMaximumSize(new Dimension(Integer.MAX_VALUE, grupo.getPreferredSize().height));
         revalidate();
         repaint();
+    }
+
+    @Override public void iniciarCargaResumen() {
+        mostrarBalanceDashboard(null);
+        panelSemaforo.sinDatos("Consultando los registros del negocio...");
+        fechaDatos.setText("Actualizando...");
+    }
+
+    @Override public void mostrarFalloResumen() {
+        mostrarBalanceDashboard(null);
+        panelSemaforo.sinDatos("No se pudo actualizar el resumen. Revise la conexion y la configuracion.");
+        fechaDatos.setText("Sin datos actualizados");
     }
 
     @Override public void mostrarSemaforo(EstadoNegocio estado) { panelSemaforo.mostrarEstado(estado); }

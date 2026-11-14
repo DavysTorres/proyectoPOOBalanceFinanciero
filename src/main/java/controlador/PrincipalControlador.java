@@ -36,20 +36,33 @@ public final class PrincipalControlador extends ControladorBase<VistaPrincipal> 
 
     // Solo se entrega un estado, para que el cajero no reciba las cifras financieras restringidas.
     public void cargarSemaforo() {
-        ejecutar(() -> {
-            var resumen = servicios.getBalance().obtenerResumenDelDia();
-            var usuario = Sesion.getInstancia().getUsuarioActual();
-            modelo.BalanceDia balance = usuario != null && usuario.tienePermiso(Permiso.VER_BALANCE)
-                    ? servicios.getBalance().obtenerBalanceDelDia(java.time.LocalDate.now()) : null;
-            return new DatosInicio(resumen, balance);
-        }, datos -> {
-            vista.mostrarUsuario(Sesion.getInstancia().getUsuarioActual());
-            vista.mostrarResumenSemaforo(datos.resumen());
-            vista.mostrarBalanceDashboard(datos.balance());
+        preparar(() -> {
+            vista.iniciarCargaResumen();
+            ejecutar(() -> {
+                try {
+                    var usuario = Sesion.getInstancia().getUsuarioActual();
+                    modelo.BalanceDia balance = usuario != null && usuario.tienePermiso(Permiso.VER_BALANCE)
+                            ? servicios.getBalance().obtenerBalanceDelDia(java.time.LocalDate.now()) : null;
+                    var resumen = balance == null ? servicios.getBalance().obtenerResumenDelDia()
+                            : servicios.getBalance().resumirBalance(balance);
+                    return new DatosInicio(resumen, balance, null);
+                } catch (Exception e) {
+                    return new DatosInicio(null, null, e);
+                }
+            }, datos -> {
+                if (datos.error() != null) {
+                    vista.mostrarFalloResumen();
+                    mostrarError(datos.error());
+                    return;
+                }
+                vista.mostrarUsuario(Sesion.getInstancia().getUsuarioActual());
+                vista.mostrarResumenSemaforo(datos.resumen());
+                vista.mostrarBalanceDashboard(datos.balance());
+            });
         });
     }
 
-    private record DatosInicio(ResumenSemaforo resumen, modelo.BalanceDia balance) { }
+    private record DatosInicio(ResumenSemaforo resumen, modelo.BalanceDia balance, Exception error) { }
 
     public void actualizarSemaforo() {
         cargarSemaforo();

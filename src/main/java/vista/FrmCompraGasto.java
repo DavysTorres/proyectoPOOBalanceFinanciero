@@ -33,7 +33,7 @@ public final class FrmCompraGasto extends FrmBase implements VistaCompraGasto {
         pestanas.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
         JPanel compras = new JPanel(new BorderLayout(10, 10));
         compras.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        JPanel formulario = new JPanel(new GridLayout(5, 2, 8, 8));
+        JPanel formulario = new JPanel(new FormularioZeroLoss.Campos());
         EstiloZeroLoss.campo(formulario, "Proveedor:", txtProveedor);
         JPanel busqueda = new JPanel(new BorderLayout(5, 0));
         busqueda.add(txtProducto, BorderLayout.CENTER);
@@ -68,7 +68,7 @@ public final class FrmCompraGasto extends FrmBase implements VistaCompraGasto {
 
         JPanel gastos = new JPanel(new BorderLayout(10, 15));
         gastos.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        JPanel campos = new JPanel(new GridLayout(6, 2, 10, 15));
+        JPanel campos = new JPanel(new FormularioZeroLoss.Campos());
         EstiloZeroLoss.campo(campos, "Concepto del gasto:", txtConceptoGasto);
         EstiloZeroLoss.campo(campos, "Monto ($):", txtMontoGasto);
         EstiloZeroLoss.campo(campos, "Tipo de gasto:", cbTipoGasto);

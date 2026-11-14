@@ -39,11 +39,11 @@ Tras iniciar sesion, las opciones del menu se muestran dentro del panel central 
 
 Las claves nuevas tienen al menos ocho caracteres. Las horas se ingresan como 08:00 y los importes sin separadores de miles, usando coma o punto decimal.
 
-## Datos de demostracion
+## Datos del negocio
 
-sql/datos_ejemplo.sql contiene tres perfiles, quince productos, tres costos fijos, compras, gastos y ventas de dos dias. Usalo solamente en un esquema de demostracion vacio que ya tenga las tablas.
+La instalacion inicia sin ventas, productos, compras ni costos de demostracion. Configure su negocio y registre sus datos reales desde los formularios. Los escenarios ficticios quedan exclusivamente en las pruebas con bases temporales; no se cargan en la base de uso diario.
 
-Usuarios de demostracion: demo_admin, demo_jefe y demo_cajero. Su clave publica de ejemplo es DemoPoo2026!. Esos usuarios no se crean automaticamente en la base real. No uses claves de demostracion para una instalacion real.
+El resumen distingue resultado registrado y meta estimada. Consulte [las reglas de calculo](docs/calculo-rentabilidad.md). La periodicidad de reposicion no determina el costo diario: se utiliza el costo promedio del inventario vendido.
 
 ## Verificacion
 

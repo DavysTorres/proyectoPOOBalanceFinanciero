@@ -61,11 +61,7 @@ public class FrmBalance extends FrmBase implements VistaBalance {
         consulta.add(consultar);
         cabecera.add(consulta, BorderLayout.SOUTH);
 
-        JPanel datos = blanco(new GridLayout(0, 2, 18, 18) {
-            private void adaptar(Container p) { setColumns(p.getWidth() >= 1100 ? 4 : p.getWidth() >= 820 ? 3 : 2); }
-            @Override public Dimension preferredLayoutSize(Container p) { adaptar(p); return super.preferredLayoutSize(p); }
-            @Override public void layoutContainer(Container p) { adaptar(p); super.layoutContainer(p); }
-        });
+        JPanel datos = blanco(new FormularioZeroLoss.Rejilla(260, 4, 18));
         fila(datos, "Ingresos por ventas:", lblIngresos, false);
         fila(datos, "Costos variables:", lblCostosVariables, false);
         fila(datos, "Margen de contribución:", lblMargenContribucion, true);
@@ -74,8 +70,8 @@ public class FrmBalance extends FrmBase implements VistaBalance {
         resultado.add(lblResultado);
         resultado.add(indicador);
         fila(datos, "Resultado del día:", resultado, true);
-        fila(datos, "Punto de equilibrio:", lblPuntoEquilibrio, true);
-        fila(datos, "Te faltaron:", lblFaltante, false);
+        fila(datos, "Meta de ventas estimada:", lblPuntoEquilibrio, true);
+        fila(datos, "Ventas adicionales estimadas:", lblFaltante, false);
 
         JPanel pie = blanco(new BorderLayout(0, 12));
         nota.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
@@ -153,7 +149,7 @@ public class FrmBalance extends FrmBase implements VistaBalance {
             boolean calculable = balance.isPuntoEquilibrioCalculable();
             lblPuntoEquilibrio.setText(calculable ? FormatoMoneda.mostrar(balance.getPuntoEquilibrio()) : "No calculable");
             lblFaltante.setText(calculable ? FormatoMoneda.mostrar(balance.getFaltante()) : "No calculable");
-            nota.setText(!calculable ? "No hay margen positivo para calcular la meta."
+            nota.setText(!calculable ? "Sin ventas o sin margen positivo para estimar la meta."
                     : balance.isPuntoEquilibrioEstimado() ? "Punto de equilibrio estimado según el catálogo."
                     : "Balance correspondiente al " + balance.getFecha() + ".");
         }
