@@ -126,7 +126,7 @@ public final class RevisionVentanas {
                     principal.mostrarResumenSemaforo(new ResumenSemaforo(new EstadoAmarillo(), "Las ventas se acercan a la meta.", d("87.18"), true));
                     imagen(principal, "principal");
                 });
-                caso("Venta presenta catalogo y detalles con total del modelo", () -> {
+                caso("Venta presenta solo el carrito y el total del modelo", () -> {
                     FrmVenta v = new FrmVenta();
                     v.mostrarProductos(Arrays.asList(producto));
                     Venta venta = new Venta(admin);

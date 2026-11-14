@@ -13,9 +13,9 @@ Si existen datos antiguos con hashes ficticios, no se pueden autenticar como si 
 ## Operacion diaria
 
 1. El administrador configura el negocio, costos, usuarios y productos.
-2. El cajero abre Registrar venta, busca un producto y pulsa Nueva venta.
-3. En la pestana Productos selecciona articulo y cantidad y pulsa Agregar.
-4. En Carrito puede reducir o quitar lineas. Cobrar guarda venta, detalles y descuento de stock juntos.
+2. El cajero abre Registrar venta y busca por nombre o codigo. Selecciona una coincidencia e indica la cantidad; Agregar o Enter inicia la venta con el primer producto.
+3. Repite la busqueda para agregar mas productos. Al agregar, el buscador se limpia y la cantidad vuelve a 1; no hay que cambiar de pestanas.
+4. La unica tabla contiene los productos de la venta. Cada fila permite restar 1, sumar 1 o eliminar el producto. El total se recalcula. Puede indicar el efectivo recibido para ver el cambio; vacio significa pago exacto. Cobrar guarda venta, detalles y descuento de stock juntos.
 5. El jefe registra compras agregando varias lineas y guarda; el inventario aumenta una sola vez.
 6. Los gastos variables afectan el dia. Un gasto fijo adicional se prorratea y no debe repetir un costo del catalogo.
 7. El jefe consulta balance, margen, historial y modifica una venta solo con motivo.

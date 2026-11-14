@@ -22,6 +22,7 @@ public final class VentaControlador extends ControladorBase<VistaVenta> {
         vista.alAccionar(AccionVista.NUEVA_VENTA, this::iniciarVenta);
         vista.alAccionar(AccionVista.BUSCAR, this::buscarProductos);
         vista.alAccionar(AccionVista.AGREGAR, this::agregarAlCarrito);
+        vista.alAccionar(AccionVista.AUMENTAR, this::aumentarCantidad);
         vista.alAccionar(AccionVista.QUITAR, this::quitarDelCarrito);
         vista.alAccionar(AccionVista.REDUCIR, this::reducirCantidad);
         vista.alAccionar(AccionVista.COBRAR, this::cobrar);
@@ -39,7 +40,9 @@ public final class VentaControlador extends ControladorBase<VistaVenta> {
     public void buscarProductos() {
         preparar(() -> {
             String filtro = vista.getFiltro();
-            ejecutar(() -> productos.buscarProductos(filtro), vista::mostrarProductos);
+            ejecutar(() -> productos.buscarProductos(filtro), encontrados -> {
+                if (Objects.equals(filtro, vista.getFiltro())) vista.mostrarProductos(encontrados);
+            });
         });
     }
 
@@ -47,17 +50,31 @@ public final class VentaControlador extends ControladorBase<VistaVenta> {
         preparar(() -> {
             Producto p = seleccionado(vista.getProductoSeleccionado());
             int cantidad = entero(vista.getCantidad());
+            if (cantidad <= 0) throw new IllegalArgumentException("La cantidad debe ser mayor que cero.");
             ejecutar(() -> {
-                ventas.agregarProducto(p, cantidad);
+                boolean nueva = ventaVisible == null;
+                if (nueva) ventaVisible = ventas.iniciarVenta();
+                try { ventas.agregarProducto(p, cantidad); }
+                catch (Exception error) {
+                    if (nueva) { ventas.cancelarVenta(); ventaVisible = null; }
+                    throw error;
+                }
                 return ventaVisible;
-            }, vista::mostrarVenta);
+            }, v -> { vista.mostrarVenta(v); vista.productoAgregado(); });
+        });
+    }
+
+    public void aumentarCantidad() {
+        preparar(() -> {
+            Producto p = seleccionado(vista.getProductoEnCarrito());
+            ejecutar(() -> { ventas.agregarProducto(p, 1); return ventaVisible; }, vista::mostrarVenta);
         });
     }
 
     // Las selecciones se leen antes del trabajo en segundo plano.
     public void quitarDelCarrito() {
         preparar(() -> {
-            Producto p = seleccionado(vista.getProductoSeleccionado());
+            Producto p = seleccionado(vista.getProductoEnCarrito());
             ejecutar(() -> {
                 ventas.quitarProducto(p);
                 return ventaVisible;
@@ -67,7 +84,7 @@ public final class VentaControlador extends ControladorBase<VistaVenta> {
 
     public void reducirCantidad() {
         preparar(() -> {
-            Producto p = seleccionado(vista.getProductoSeleccionado());
+            Producto p = seleccionado(vista.getProductoEnCarrito());
             ejecutar(() -> {
                 ventas.reducirCantidad(p);
                 return ventaVisible;
@@ -77,11 +94,19 @@ public final class VentaControlador extends ControladorBase<VistaVenta> {
 
     // Solo presenta exito despues de que el servicio confirmo la escritura completa.
     public void cobrar() {
-        ejecutar(ventas::cobrar, v -> {
-            ventaVisible = null;
-            vista.mostrarVenta(null);
-            vista.mostrarVentaCobrada(v);
-            informarCambio();
+        preparar(() -> {
+            String recibido = vista.getEfectivoRecibido();
+            if (recibido != null && !recibido.isBlank()) {
+                java.math.BigDecimal efectivo = decimal(recibido);
+                if (efectivo.signum() < 0 || (ventaVisible != null && efectivo.compareTo(ventaVisible.getTotal()) < 0))
+                    throw new IllegalArgumentException("El efectivo recibido no alcanza para pagar la venta.");
+            }
+            ejecutar(ventas::cobrar, v -> {
+                ventaVisible = null;
+                vista.mostrarVenta(null);
+                vista.mostrarVentaCobrada(v);
+                informarCambio();
+            });
         });
     }
 

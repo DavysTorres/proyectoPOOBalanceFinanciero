@@ -35,7 +35,11 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
     private final JPanel encabezadoDashboard = new JPanel();
     private final JLabel bienvenida = new JLabel();
     private final JLabel orientacion = new JLabel();
-    private final JPanel cifras = new JPanel(new FormularioZeroLoss.Rejilla(290, 2, 18)) {
+    private final JPanel cifras = new JPanel(new GridLayout(0, 2, 16, 16) {
+        private void adaptar(Container p) { setColumns(p.getWidth() >= 1048 ? 4 : p.getWidth() >= 516 ? 2 : 1); }
+        @Override public Dimension preferredLayoutSize(Container p) { adaptar(p); return super.preferredLayoutSize(p); }
+        @Override public void layoutContainer(Container p) { adaptar(p); super.layoutContainer(p); }
+    }) {
         @Override public Dimension getMaximumSize() { return new Dimension(Integer.MAX_VALUE, getPreferredSize().height); }
     };
     private final JLabel ingresos = new JLabel("Pendiente de actualizar");
@@ -45,6 +49,11 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
     private final JLabel costosVariables = new JLabel("Pendiente de actualizar");
     private final JLabel costosFijos = new JLabel("Pendiente de actualizar");
     private final JLabel margenContribucion = new JLabel("Pendiente de actualizar");
+    private final JLabel lecturaDia = new JLabel("Actualiza el resumen para conocer tu avance.");
+    private final JPanel detalleCostos = new JPanel(new FormularioZeroLoss.Rejilla(240, 3, 16));
+    private final PanelPlanVentas planVentas = new PanelPlanVentas();
+    private final JPanel zonaPlan = TemaZeroLoss.tarjeta();
+    private final JButton verDetalle = new JButton("Ver costos y entender mi resultado");
     private final JLabel fechaDatos = new JLabel("Actualice para consultar la jornada.");
     private final JPanel operaciones = new JPanel(new GridLayout(0, 1, 0, 4));
     private final JPanel consultas = new JPanel(new GridLayout(0, 1, 0, 4));
@@ -157,37 +166,67 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         cabecera.add(orientacion);
         bloque(cabecera);
         bloque(Box.createVerticalStrut(26));
+        JPanel estado = tarjeta();
+        estado.setLayout(new BorderLayout(0, 12));
+        lecturaDia.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lecturaDia.setForeground(TINTA);
+        estado.add(lecturaDia, BorderLayout.NORTH);
+        estado.add(panelSemaforo, BorderLayout.CENTER);
+        fechaDatos.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        fechaDatos.setForeground(SUAVE);
+        estado.add(fechaDatos, BorderLayout.SOUTH);
+        bloque(estado);
+        bloque(Box.createVerticalStrut(18));
         cifras.setOpaque(false);
-        String[] nombres = {"INGRESOS DEL D\u00cdA", "RESULTADO REGISTRADO", "META ESTIMADA DE VENTAS", "VENTAS ADICIONALES ESTIMADAS", "COSTO VENDIDO Y OTROS GASTOS VARIABLES", "COSTOS FIJOS DEL D\u00cdA", "MARGEN PARA CUBRIR COSTOS FIJOS"};
-        String[] ayudas = {"Total de ventas registradas", "Margen menos costos fijos del d\u00eda",
-                "Ventas necesarias para cubrir los costos", "Importe pendiente para alcanzar el equilibrio", "Productos vendidos y gastos variables registrados", "Cuota diaria de los costos mensuales registrados", "Ventas menos costo vendido y gastos variables"};
-        JLabel[] valores = {ingresos, resultado, meta, faltante, costosVariables, costosFijos, margenContribucion};
+        String[] nombres = {"LO QUE HAS VENDIDO HOY", "PARA CUBRIR TUS COSTOS", "TE FALTA VENDER", "GANANCIA O P\u00c9RDIDA DE HOY"};
+        String[] ayudas = {"Ventas registradas hasta este momento", "Punto de equilibrio estimado con el margen de hoy",
+                "Ventas adicionales estimadas para llegar al equilibrio", "Ventas menos el costo vendido y todos los gastos registrados"};
+        JLabel[] valores = {ingresos, meta, faltante, resultado};
         for (int i = 0; i < nombres.length; i++) {
             JPanel tarjeta = tarjeta();
-            tarjeta.setLayout(new BorderLayout(0, 14));
+            tarjeta.setLayout(new BorderLayout(0, 12));
+            tarjeta.setPreferredSize(new Dimension(250, 190));
             tarjeta.add(texto("<html>" + nombres[i] + "</html>", 12, TemaZeroLoss.ACENTO, true), BorderLayout.NORTH);
             valores[i].setText("\u2014");
             valores[i].setFont(new Font("Segoe UI", Font.BOLD, 25));
             valores[i].setForeground(TINTA);
             tarjeta.add(valores[i], BorderLayout.CENTER);
-            JLabel ayuda = i == 2 ? notaMeta : new JLabel("<html>" + ayudas[i] + "</html>");
+            JLabel ayuda = i == 1 ? notaMeta : new JLabel("<html>" + ayudas[i] + "</html>");
             ayuda.setFont(new Font("Segoe UI", Font.PLAIN, 12));
             ayuda.setForeground(SUAVE);
             tarjeta.add(ayuda, BorderLayout.SOUTH);
             cifras.add(tarjeta);
         }
         bloque(cifras);
-        bloque(Box.createVerticalStrut(24));
-        JPanel estado = tarjeta();
-        estado.setLayout(new BorderLayout(0, 18));
-        estado.add(texto("Salud del negocio", 18, TINTA, true), BorderLayout.NORTH);
-        estado.add(panelSemaforo, BorderLayout.CENTER);
-        fechaDatos.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        fechaDatos.setForeground(SUAVE);
-        estado.add(fechaDatos, BorderLayout.SOUTH);
-        bloque(estado);
-        bloque(Box.createVerticalStrut(22));
-        guia.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        bloque(Box.createVerticalStrut(18));
+        zonaPlan.setLayout(new BorderLayout());
+        zonaPlan.add(planVentas);
+        bloque(zonaPlan);
+        bloque(Box.createVerticalStrut(16));
+        TemaZeroLoss.boton(verDetalle, TemaZeroLoss.TipoBoton.SECUNDARIO);
+        verDetalle.addActionListener(e -> {
+            if (estaOcupada()) return;
+            detalleCostos.setVisible(!detalleCostos.isVisible());
+            verDetalle.setText(detalleCostos.isVisible() ? "Ocultar detalle de costos" : "Ver costos y entender mi resultado");
+            dashboard.revalidate();
+        });
+        bloque(verDetalle);
+        bloque(Box.createVerticalStrut(12));
+        detalleCostos.setOpaque(false);
+        String[] titulosDetalle = {"COSTO DE LO VENDIDO Y GASTOS VARIABLES", "COSTOS FIJOS QUE CORRESPONDEN A HOY", "LO QUE QUEDA PARA PAGAR LOS COSTOS FIJOS"};
+        JLabel[] cifrasDetalle = {costosVariables, costosFijos, margenContribucion};
+        for (int i = 0; i < titulosDetalle.length; i++) {
+            JPanel tarjeta = tarjeta();
+            tarjeta.setLayout(new BorderLayout(0, 12));
+            tarjeta.add(texto("<html>" + titulosDetalle[i] + "</html>", 12, SUAVE, true), BorderLayout.NORTH);
+            cifrasDetalle[i].setFont(new Font("Segoe UI", Font.BOLD, 22));
+            tarjeta.add(cifrasDetalle[i]);
+            detalleCostos.add(tarjeta);
+        }
+        detalleCostos.setVisible(false);
+        bloque(detalleCostos);
+        bloque(Box.createVerticalStrut(14));
+        guia.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         guia.setForeground(SUAVE);
         bloque(guia);
     }
@@ -312,13 +351,22 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
 
     private void bloque(Component componente) {
         if (componente instanceof JComponent jc) jc.setAlignmentX(Component.LEFT_ALIGNMENT);
-        if (componente instanceof JPanel panel)
-            panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, panel.getPreferredSize().height));
-        dashboard.add(componente);
+        if (componente instanceof JPanel panel) {
+            JPanel envoltura = new JPanel(new BorderLayout()) {
+                @Override public Dimension getMaximumSize() { return new Dimension(Integer.MAX_VALUE, getPreferredSize().height); }
+            };
+            envoltura.setOpaque(false);
+            envoltura.setAlignmentX(Component.LEFT_ALIGNMENT);
+            envoltura.add(panel);
+            dashboard.add(envoltura);
+        } else dashboard.add(componente);
     }
 
     @Override public void mostrarBalanceDashboard(BalanceDia balance) {
+        planVentas.mostrarBalance(balance);
         if (balance == null) {
+            lecturaDia.setText("Actualiza el resumen para conocer tu avance.");
+            notaMeta.setText("Esperando los registros del negocio.");
             for (JLabel valor : new JLabel[]{ingresos, resultado, meta, faltante, costosVariables, costosFijos, margenContribucion}) valor.setText("\u2014");
             return;
         }
@@ -331,14 +379,31 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         resultado.setForeground(balance.getResultado().signum() < 0 ? new Color(185, 28, 28) : new Color(21, 128, 61));
         meta.setText(!balance.isPuntoEquilibrioCalculable() ? "No calculable"
                 : util.FormatoMoneda.mostrar(balance.getPuntoEquilibrio()));
-        notaMeta.setText(balance.isPuntoEquilibrioEstimado() ? "<html>Estimaci\u00f3n seg\u00fan el margen de hoy; cambiar\u00e1 si cambian ventas o gastos.</html>"
+        notaMeta.setText(balance.isPuntoEquilibrioEstimado() ? "<html>Estimado con las ventas de hoy. Cambia con nuevos movimientos.</html>"
                 : "Ventas necesarias para cubrir los costos");
         faltante.setText(balance.isPuntoEquilibrioCalculable() ? util.FormatoMoneda.mostrar(balance.getFaltante()) : "No calculable");
-        guia.setText("<html>Resultado seg\u00fan costos y gastos registrados. Las compras reponen inventario; "
-                + "su pago afecta la caja y su costo se reconoce al vender. Sin ventas con margen positivo, "
-                + "no se estima una meta. Cubrir costos no equivale a obtener una utilidad objetivo.</html>");
-        notaMeta.setText(!balance.isPuntoEquilibrioCalculable()
-                ? "<html>Sin ventas o sin margen positivo para estimar.</html>" : notaMeta.getText());
+        if (balance.getIngresos().signum() == 0) {
+            lecturaDia.setText("Todav\u00eda no hay ventas registradas hoy");
+            meta.setText("Por planificar");
+            faltante.setText("Esperando ventas");
+            notaMeta.setText("<html>Sin ventas: usa el simulador con tu margen previsto.</html>");
+        } else if (!balance.isPuntoEquilibrioCalculable()) {
+            lecturaDia.setText("Las ventas a\u00fan no dejan margen para cubrir tus costos");
+            notaMeta.setText("<html>Revisa precios y costos: no hay margen positivo para estimar.</html>");
+        } else if (balance.getResultado().signum() < 0) {
+            lecturaDia.setText("A\u00fan te falta vender " + util.FormatoMoneda.mostrar(balance.getFaltante()) + " para cubrir los costos de hoy");
+        } else if (balance.getResultado().signum() == 0) {
+            lecturaDia.setText("Llegaste al equilibrio: cubres tus costos, con ganancia cero");
+        } else {
+            lecturaDia.setText("Ya cubres tus costos y llevas " + util.FormatoMoneda.mostrar(balance.getResultado()) + " de ganancia registrada");
+        }
+        lecturaDia.setText("<html>" + lecturaDia.getText() + "</html>");
+        guia.setText("<html><b>\u00bfCompras inventario cada semana o cada mes?</b> Registrar una compra aumenta tu inventario y reduce tu caja. "
+                + "Para calcular la ganancia, se descuenta el costo de los productos cuando los vendes, aunque los hayas comprado otro d\u00eda. "
+                + "El equilibrio significa ganancia cero; las ventas que lo superan no son ganancia completa, porque tambi\u00e9n tienen costo. "
+                + "La ganancia depende de que est\u00e9n registrados todos los costos y gastos.</html>");
+        dashboard.revalidate();
+        dashboard.repaint();
 
     }
 
@@ -365,6 +430,13 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         btnAdministracion.setVisible(admin);
         boolean financiero = usuario != null && usuario.isActivo() && usuario.tienePermiso(Permiso.VER_BALANCE);
         cifras.setVisible(financiero);
+        zonaPlan.setVisible(financiero);
+        verDetalle.setVisible(financiero);
+        lecturaDia.setVisible(financiero);
+        if (!financiero || anterior != rolMostrado) {
+            detalleCostos.setVisible(false);
+            planVentas.limpiar();
+        }
         consultas.setVisible(financiero);
 
         operaciones.removeAll();
@@ -375,9 +447,9 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         if (!admin || anterior != rolMostrado) gestion.setVisible(false);
         btnAdministracion.setText("Administraci" + (char)243 + "n  " + (gestion.isVisible() ? "-" : "+"));
         accesosAdmin.forEach(b -> { b.setVisible(admin); b.setEnabled(!estaOcupada()); });
-        bienvenida.setText(admin ? "Panel de administraci\u00f3n" : financiero ? "Resumen de la jornada" : "Punto de venta");
+        bienvenida.setText(admin ? "Rentabilidad de mi negocio" : financiero ? "Rentabilidad de la jornada" : "Punto de venta");
         guia.setText("Selecciona una opci" + (char)243 + "n en la barra lateral para continuar.");
-        orientacion.setText(admin ? "Indicadores clave y estado del negocio para tomar decisiones."
+        orientacion.setText(admin ? "Primero cubre tus costos; luego convierte tus ventas en ganancia."
                 : financiero ? "Supervisa los resultados y organiza las operaciones del d\u00eda."
                 : "Registra las ventas y consulta c\u00f3mo avanza el negocio hoy.");
         if (rolMostrado != null) {
@@ -426,6 +498,7 @@ public class FrmPrincipal extends FrmBase implements VistaPrincipal {
         btnInicio.setEnabled(!ocupada);
         btnAdministracion.setEnabled(!ocupada);
         accesosAdmin.forEach(b -> b.setEnabled(!ocupada));
+        verDetalle.setEnabled(!ocupada);
         administracion.getBtnHistorial().setEnabled(!ocupada);
         administracion.getBtnReportes().setEnabled(!ocupada);
     }

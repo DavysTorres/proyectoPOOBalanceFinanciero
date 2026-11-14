@@ -244,7 +244,7 @@ public final class RevisionServicio {
             BalanceDia b = new BalanceDia(FECHA, d("0"), d("0"), d("0"), d("100"), d("-100"),
                     d("0"), d("0"), d("0"), false, false);
             verificar(new Diagnostico().evaluar(b, negocio()) instanceof EstadoRojo);
-            verificar(new EstadoRojo().getMensaje(b).contains("No hay margen"));
+            verificar(new EstadoRojo().getMensaje(b).contains("Sin ventas registradas"));
         });
         probar("Balance invalida una meta numerica cuando no es calculable", () ->
                 rechaza(IllegalArgumentException.class, () -> new BalanceDia(FECHA, d("0"), d("0"), d("0"),

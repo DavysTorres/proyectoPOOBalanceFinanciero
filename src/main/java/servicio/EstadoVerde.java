@@ -17,8 +17,9 @@ public final class EstadoVerde implements EstadoNegocio {
 
     // Mensaje sin cifras para que tambien pueda utilizarlo el perfil cajero.
     public String getMensaje(BalanceDia balance) {
-        if (!balance.isPuntoEquilibrioCalculable())
-            return "No hay margen positivo observado o faltan ventas para estimar la meta. Revise los datos registrados.";
-        return "Las ventas cubren los costos registrados hasta ahora; no garantiza el resultado al cierre." + (balance.isPuntoEquilibrioEstimado() ? " Meta estimada si se mantiene el margen observado; puede cambiar con nuevas ventas y gastos." : "");
+        if (!balance.isPuntoEquilibrioCalculable()) return "No hay margen positivo para estimar una meta.";
+        return balance.getResultado().signum() == 0
+                ? "Estas en equilibrio: has cubierto los costos registrados, con ganancia cero."
+                : "Tus ventas ya dejan ganancia despues de cubrir los costos registrados. El resultado puede cambiar durante el dia.";
     }
 }

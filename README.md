@@ -27,7 +27,7 @@ Tras iniciar sesion, las opciones del menu se muestran dentro del panel central 
 - Administrador: menu lateral de operaciones y panel interno de administracion con seis accesos.
 - Jefe: venta, compras y gastos, balance, margenes, historial, ajustes y cierre.
 - Cajero: registrar ventas y consultar semaforo y progreso, sin recibir cifras monetarias del balance.
-- Venta: cargar productos, pulsar Nueva venta, seleccionar producto y cantidad, agregar al carrito y cobrar. Las pestanas separan catalogo y carrito.
+- Venta: buscar por nombre o codigo, seleccionar el producto, indicar cantidad y agregar. El primer producto inicia la venta; la tabla solo muestra lo que se va a cobrar, con -1, +1 y Eliminar en cada fila. El total se actualiza al instante. Efectivo recibido es opcional: vacio significa pago exacto; al introducirlo se muestra el cambio.
 - Compras: escribir el proveedor, buscar y seleccionar un producto del catalogo, indicar cantidad y costo; agregar lineas y guardar. Las pestanas separan compras, gastos y registros del dia. La fecha del gasto la asigna el servicio al guardar; los gastos fijos requieren dias de operacion.
 - Margenes: consultar los productos con mayor y menor margen, seleccionar uno y pulsar Ver consejo. Los datos provienen del catalogo y del analizador del proyecto.
 - Balance: escribir una fecha AAAA-MM-DD, consultar las siete cifras o exportar CSV.

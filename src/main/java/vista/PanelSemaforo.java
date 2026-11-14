@@ -45,6 +45,9 @@ public final class PanelSemaforo extends JPanel {
     }
 
     public void sinDatos(String mensaje) {
+        lblMensaje.setToolTipText(mensaje);
+        lblIndicadorColor.getAccessibleContext().setAccessibleName(mensaje);
+        barraProgreso.setForeground(Color.LIGHT_GRAY);
         lblIndicadorColor.setForeground(Color.LIGHT_GRAY);
         lblMensaje.setText(mensaje);
         barraProgreso.setValue(0);

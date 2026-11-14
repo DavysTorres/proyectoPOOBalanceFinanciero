@@ -13,6 +13,10 @@ import java.util.*;
 final class VistaPrueba implements VistaLogin, VistaPrincipal, VistaVenta, VistaCompraGasto, VistaBalance, VistaMargen, VistaHistorial, VistaModificarVenta, VistaCierre, VistaUsuarios, VistaProductos, VistaCostosFijos, VistaConfiguracion {
     final Map<AccionVista, Runnable> acciones = new EnumMap<>(AccionVista.class);
     final List<Boolean> estadosOcupada = new ArrayList<>();
+    String efectivoRecibido = "";
+    modelo.Producto productoCarrito;
+    @Override public String getEfectivoRecibido() { return efectivoRecibido; }
+    @Override public modelo.Producto getProductoEnCarrito() { return productoCarrito != null ? productoCarrito : seleccionado; }
     String error, informacion, filtro = "", cantidad = "1", costo = "6000", precio = "10000", proveedor = "Proveedor";
     String concepto = "Transporte", monto = "1000", dias = "30", fecha = "2026-11-06", ruta;
     String username = "ana", nombre = "Nombre", stock = "100", minimo = "2", apertura = "08:00", cierre = "18:00", amarillo = "70", margen = "15";

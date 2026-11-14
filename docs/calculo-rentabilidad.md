@@ -32,3 +32,14 @@ RevisionEquilibrio usa DAO sustitutos sin conexiones para comprobar ausencia de 
 Se retiraron el script de carga y su generador del proyecto. Las pruebas conservan casos sint?ticos ?nicamente en memoria y en esquemas temporales. La base configurada en `.env` se conserva por decisi?n del usuario; no se borraron sus registros ni se sustituyeron por ceros.
 
 El resumen muestra ventas, resultado, meta y faltante estimados, costos variables, costos fijos y margen de contribuci?n. Al iniciar una actualizaci?n limpia las cifras anteriores; si falla, muestra ?Sin datos? y no conserva un sem?foro que parezca vigente.
+
+
+## Lectura para el propietario y simulador
+
+El inicio prioriza vendido hoy, ventas necesarias para cubrir costos, ventas faltantes y ganancia o perdida registrada. En equilibrio la ganancia es cero. Las ventas por encima del equilibrio no equivalen integramente a ganancia: conservan su costo variable.
+
+El simulador del dia utiliza los costos fijos diarios registrados, un margen previsto indicado por el propietario (despues del costo vendido y los gastos variables) y una ganancia deseada. Ventas objetivo = (costos fijos diarios + ganancia deseada) / (margen previsto / 100). Redondea hacia arriba al centavo. Los valores previstos no cambian el balance, el inventario ni el semaforo y no se guardan como configuracion.
+
+Ejemplo: costos fijos diarios 100000 y margen previsto 40 % requieren 250000 en ventas para equilibrar. Para una ganancia de 50000 se requieren 375000 en ventas totales del dia, si se mantiene ese margen y se registran todos los costos. Esta herramienta permite planificar sin ventas previas, sin inventar una mezcla del catalogo.
+
+El pago de una reposicion afecta caja en su fecha; su mercancia permanece como inventario y se reconoce como costo al venderla, aunque la reposicion sea semanal, quincenal o mensual. La ganancia mostrada no es efectivo disponible.

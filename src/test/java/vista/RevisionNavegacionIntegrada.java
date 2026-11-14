@@ -76,6 +76,9 @@ public final class RevisionNavegacionIntegrada {
                 for (int i = 1; i <= 18; i++) catalogo.add(new Producto(i, "Producto de ejemplo " + i,
                         new java.math.BigDecimal("11500"), new java.math.BigDecimal("7000"), 35, 3));
                 ((FrmVenta)modulos.get(0)).mostrarProductos(catalogo);
+                Venta carrito = new Venta(admin);
+                for (Producto p : catalogo) carrito.agregarDetalle(p, 1);
+                ((FrmVenta)modulos.get(0)).mostrarVenta(carrito);
                 long visibles = java.util.Arrays.stream(Window.getWindows()).filter(Window::isVisible).count();
                 for (FrmBase modulo : modulos) {
                     Container contenido = modulo.getContentPane();
@@ -91,7 +94,8 @@ public final class RevisionNavegacionIntegrada {
                     verificarCampos(principal.getContentPane());
                     if (modulo instanceof FrmVenta) {
                         JTable tabla = primeraTabla(contenido);
-                        verificar(tabla.getParent().getHeight() >= 320);
+                        // Reserva al menos ocho renglones tras el buscador y el area de cobro.
+                        verificar(tabla.getParent().getHeight() >= tabla.getRowHeight() * 8);
                         verificar(tabla.getRowCount() == 18);
                         verificar(contenido.getWidth() >= (principal.getContentPane().getWidth() - 238) * 0.9);
                     }
@@ -115,10 +119,10 @@ public final class RevisionNavegacionIntegrada {
                 venta.alAccionar(vista.contratos.AccionVista.NUEVA_VENTA, () -> nuevas[0]++);
                 javax.swing.Action nueva = venta.cuerpo.getActionMap().get("Nueva venta");
                 nueva.actionPerformed(new java.awt.event.ActionEvent(venta, 0, "F2"));
-                verificar(nuevas[0] == 1);
+                verificar(nuevas[0] == 0);
                 venta.setOcupada(true);
                 nueva.actionPerformed(new java.awt.event.ActionEvent(venta, 0, "F2"));
-                verificar(nuevas[0] == 1);
+                verificar(nuevas[0] == 0);
                 verificar(!principal.getBtnVentas().isEnabled());
                 verificar(!boton(principal, "Cerrar sesi" + (char)243 + "n").isEnabled());
                 principal.mostrarInicio();

@@ -352,6 +352,32 @@ public final class RevisionControlador {
             v.pulsar(AccionVista.COBRAR);
             verificar(s.cobros == 1 && v.ventaMostrada == null && v.ventaCobrada.getId() == 42);
         });
+        caso("Primer producto inicia la venta y el efectivo insuficiente no registra cobro", () -> {
+            VistaPrueba v = new VistaPrueba();
+            v.seleccionado = producto();
+            Ventas s = new Ventas();
+            new VentaControlador(v, s, new Productos(), DIRECTO);
+            v.pulsar(AccionVista.AGREGAR);
+            verificar(s.actual != null && s.actual.getDetalles().size() == 1);
+            v.efectivoRecibido = "1";
+            v.pulsar(AccionVista.COBRAR);
+            verificar(s.cobros == 0 && s.actual != null && v.error.contains("no alcanza"));
+            v.efectivoRecibido = "20000";
+            v.pulsar(AccionVista.COBRAR);
+            verificar(s.cobros == 1);
+            v.pulsar(AccionVista.AGREGAR);
+            verificar(s.actual != null && s.actual.getDetalles().size() == 1);
+        });
+        caso("Fallo al primer agregado libera el carrito sin dejar una venta bloqueada", () -> {
+            VistaPrueba v = new VistaPrueba(); v.seleccionado = producto(); v.cantidad = "101";
+            Ventas s = new Ventas(); new VentaControlador(v, s, new Productos(), DIRECTO);
+            v.pulsar(AccionVista.AGREGAR);
+            verificar(s.actual == null && v.error.contains("Stock insuficiente"));
+            v.cantidad = "1"; v.pulsar(AccionVista.AGREGAR);
+            verificar(s.actual != null && s.actual.getTotal().compareTo(d("10000")) == 0);
+            v.pulsar(AccionVista.AUMENTAR);
+            verificar(s.actual.getTotal().compareTo(d("20000")) == 0);
+        });
         caso("Cancelar y buscar se delegan a los servicios", () -> {
             VistaPrueba v = new VistaPrueba();
             Ventas s = new Ventas();

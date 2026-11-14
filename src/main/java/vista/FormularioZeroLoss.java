@@ -92,7 +92,16 @@ final class FormularioZeroLoss {
                         || nombre.contains("concepto") || nombre.contains("proveedor");
                 columna.setPreferredWidth(descripcion ? 320 : 110);
                 columna.setMinWidth(60);
-                if (nombre.contains("precio") || nombre.contains("costo") || nombre.contains("monto") || nombre.contains("total")) {
+                if (nombre.equals("restar") || nombre.equals("sumar")) {
+                    columna.setPreferredWidth(60); columna.setMinWidth(50); columna.setMaxWidth(70);
+                } else if (nombre.equals("eliminar")) {
+                    columna.setPreferredWidth(95); columna.setMinWidth(85); columna.setMaxWidth(105);
+                } else if (nombre.equals("cantidad")) {
+                    columna.setPreferredWidth(75); columna.setMaxWidth(95);
+                } else if (nombre.equals("precio unitario") || nombre.equals("importe")) {
+                    columna.setMinWidth(120); columna.setPreferredWidth(140);
+                }
+                if (nombre.contains("precio") || nombre.contains("costo") || nombre.contains("monto") || nombre.contains("total") || nombre.equals("importe")) {
                     javax.swing.table.DefaultTableCellRenderer dinero = new javax.swing.table.DefaultTableCellRenderer();
                     dinero.setHorizontalAlignment(SwingConstants.RIGHT);
                     columna.setCellRenderer(dinero);
