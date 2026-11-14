@@ -81,3 +81,6 @@ La revision de ventanas guarda capturas en target/revision-ventanas. Las pruebas
 - revision-modelo.md: registro historico de la revision inicial del modelo.
 
 La exportacion actual es CSV, no PDF ni XLSX. Las pruebas actuales son mains de Java, no JUnit. Esos puntos y la validacion con un negocio real deben resolverse para afirmar cumplimiento completo de la entrega original.
+
+
+El acceso a ventas reconoce `cajero_id` (esquema de referencia) y `usuario_id` (instalaciones anteriores) como identificador del responsable. No requiere renombrar la columna ni eliminar ventas existentes. `dao.RevisionEsquemaVenta` permite comprobar la compatibilidad del esquema configurado con consultas de solo lectura y EXPLAIN; no registra ventas ni descuenta inventario.

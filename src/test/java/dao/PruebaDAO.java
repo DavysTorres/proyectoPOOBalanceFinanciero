@@ -308,6 +308,27 @@ public class PruebaDAO {
             v.agregarDetalle(producto, 1);
             rechaza(() -> new VentaDAO(c).guardarConDetalles(v));
         });
+        caso("Venta guarda y consulta instalaciones con usuario_id sin cambiar sus datos previos", () -> {
+            int anteriores = contar("ventas");
+            Producto p = producto("Compatibilidad usuario_id", 5);
+            new ProductoDAO(c).guardar(p);
+            try (Statement cambio = c.createStatement()) { cambio.executeUpdate("ALTER TABLE ventas RENAME COLUMN cajero_id TO usuario_id"); }
+            try {
+                VentaDAO dao = new VentaDAO(c);
+                verificar(dao.columnaCajero().equals("usuario_id"));
+                Venta nueva = nuevaVenta(p, 2);
+                dao.guardarConDetalles(nueva);
+                Venta leida = dao.buscarPorId(nueva.getId());
+                verificar(leida.getCajero().getId() == usuario.getId());
+                monto("20000", leida.getTotal());
+                verificar(new ProductoDAO(c).buscarPorId(p.getId()).getStock() == 3);
+                verificar(contar("ventas") == anteriores + 1);
+                verificar(dao.listarPorFecha(FECHA).stream().anyMatch(v -> v.getId() == nueva.getId()));
+            } finally {
+                try (Statement cambio = c.createStatement()) { cambio.executeUpdate("ALTER TABLE ventas RENAME COLUMN usuario_id TO cajero_id"); }
+            }
+            verificar(new VentaDAO(c).columnaCajero().equals("cajero_id"));
+        });
     }
 
     // Comprueba tambien la ruta real de los DAO sin conexion inyectada.

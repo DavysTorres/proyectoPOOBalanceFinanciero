@@ -13,6 +13,27 @@ import java.util.Objects;
  * Guarda una venta junto con detalles y descuento atomico del inventario.
  */
 public class VentaDAO extends DAOBase<Venta> {
+    private String columnaResponsable;
+
+    // Instalaciones anteriores usan usuario_id; el esquema de referencia usa cajero_id.
+    // Solo se admiten estos identificadores constantes, nunca nombres recibidos de la vista.
+    final String columnaCajero() {
+        if (columnaResponsable != null) return columnaResponsable;
+        boolean cajero = false, usuario = false;
+        Connection c = conexion();
+        try (ResultSet columnas = c.getMetaData().getColumns(c.getCatalog(), null, "ventas", null)) {
+            while (columnas.next()) {
+                String nombre = columnas.getString("COLUMN_NAME");
+                cajero |= "cajero_id".equalsIgnoreCase(nombre);
+                usuario |= "usuario_id".equalsIgnoreCase(nombre);
+            }
+        } catch (SQLException e) {
+            throw new AccesoDatosException("No se pudo comprobar el esquema de ventas", e);
+        }
+        if (!cajero && !usuario) throw new AccesoDatosException("La tabla ventas no tiene una columna de usuario compatible");
+        columnaResponsable = cajero ? "cajero_id" : "usuario_id";
+        return columnaResponsable;
+    }
     // La misma conexion debe utilizarse para todas las operaciones de una transaccion.
     public VentaDAO() {
         super();
@@ -25,7 +46,7 @@ public class VentaDAO extends DAOBase<Venta> {
     // Reconstruye el precio historico de cada linea en un producto separado del catalogo.
     @Override
     protected Venta mapear(ResultSet r) throws SQLException {
-        Usuario usuario = new UsuarioDAO(conexion()).buscarPorId(r.getInt("cajero_id"));
+        Usuario usuario = new UsuarioDAO(conexion()).buscarPorId(r.getInt(columnaCajero()));
         Venta v = new Venta(usuario);
         v.setId(r.getInt("id"));
         v.setFechaHora(r.getTimestamp("fecha_hora").toLocalDateTime());
@@ -53,7 +74,7 @@ public class VentaDAO extends DAOBase<Venta> {
         nuevo(v.getId());
         if (v.estaVacia()) throw new IllegalArgumentException("La venta no puede estar vacia");
         int id = transaccion(() -> {
-            int generado = insertar("INSERT INTO ventas(cajero_id,fecha_hora,total) VALUES (?,?,?)",
+            int generado = insertar("INSERT INTO ventas(" + columnaCajero() + ",fecha_hora,total) VALUES (?,?,?)",
                     v.getCajero().getId(), v.getFechaHora(), v.calcularTotal());
             for (DetalleVenta d : v.getDetalles()) {
                 idValido(d.getProducto().getId());
