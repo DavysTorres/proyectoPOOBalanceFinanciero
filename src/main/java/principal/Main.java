@@ -1,10 +1,10 @@
 package principal;
 
 import javax.swing.SwingUtilities;
-import vista.FrmLogin;
 
 public class Main {
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(FrmLogin::new);
+        // Todos los componentes Swing se construyen en el hilo de la interfaz.
+        SwingUtilities.invokeLater(() -> new AplicacionDesktop().iniciar());
     }
 }

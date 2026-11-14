@@ -1,76 +1,120 @@
 package conexion;
 
-import io.github.cdimascio.dotenv.Dotenv;
+import excepciones.AccesoDatosException;
+import util.ConfiguracionEntorno;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class conexionDB {
-
-    // 1. Variable para almacenar la única instancia de la clase
-    private static conexionDB instance;
-
-    // 2. Variable para almacenar la conexión JDBC de Java
+/**
+ * Unico Singleton que abre y cierra la conexion de la aplicacion de escritorio.
+ */
+public final class conexionDB {
+    // Se conserva el nombre publico existente para no romper las referencias del proyecto.
+    private static final conexionDB INSTANCE = new conexionDB();
     private Connection connection;
+    private boolean transaccionActiva;
 
-    // Lee .env desde el directorio de trabajo; el entorno del sistema tiene prioridad.
-    private static final Dotenv ENV = Dotenv.configure().ignoreIfMissing().load();
-
-    // 3. Constructor privado para evitar que se instancie con 'new'
+    // Obtener el Singleton no conecta a MySQL; se conecta solo cuando se solicita.
     private conexionDB() {
-        conectar();
     }
 
-    // 4. Método público estático para obtener la única instancia
-    public static synchronized conexionDB getInstance() {
-        if (instance == null) {
-            instance = new conexionDB();
-        }
-        return instance;
+    // La inicializacion estatica de Java garantiza una sola instancia.
+    public static conexionDB getInstance() {
+        return INSTANCE;
     }
 
-    private void conectar(){
-        String url = configuracionObligatoria("DB_URL");
-        String usuario = configuracionObligatoria("DB_USER");
-        String password = configuracionObligatoria("DB_PASSWORD");
-        try {  // Registrar driver si es necesario
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection(url, usuario, password);
-            System.out.println("Conexion exitosa con Mysql");
-        }catch (ClassNotFoundException e){
-            System.err.println("No se encontro el driver de Mysql: "+e.getMessage());
-        }catch (SQLException e){
-            System.err.println("Error al conectar con MySQL: " + e.getMessage());
-        }
-    }
-
-    private static String configuracionObligatoria(String clave) {
-        String valor = ENV.get(clave);
-        if (valor == null || valor.isBlank()) {
-            throw new IllegalStateException("Configura " + clave + " en .env o en las variables de entorno");
-        }
-        return valor;
-    }
-
-    public Connection getConnection() throws SQLException{
-        if(connection == null || connection.isClosed()){
-            conectar();
-        }
-        if (connection == null){
-            throw new SQLException("No se establecio connexion con Mysql");
+    // Reutiliza la conexion abierta y nunca reemplaza una transaccion explicita perdida.
+    public synchronized Connection getConnection() throws SQLException {
+        if (connection == null || connection.isClosed()) {
+            if (transaccionActiva)
+                throw new SQLException("La conexion de la transaccion se cerro; no se puede continuar");
+            connection = abrirConexion();
         }
         return connection;
     }
 
-    public void desconectar(){
+    // Lee la configuracion existente sin imprimir credenciales ni ocultar errores JDBC.
+    private Connection abrirConexion() throws SQLException {
+        ConfiguracionEntorno entorno = new ConfiguracionEntorno();
+        String url = configuracionObligatoria(entorno, "DB_URL");
+        String usuario = configuracionObligatoria(entorno, "DB_USER");
+        String password = configuracionObligatoria(entorno, "DB_PASSWORD");
+        // JDBC descubre automaticamente el driver MySQL que ya esta en el classpath.
+        return DriverManager.getConnection(url, usuario, password);
+    }
+
+    // La configuracion se consulta al conectar, por lo que cerrar no necesita leer .env.
+    private static String configuracionObligatoria(ConfiguracionEntorno entorno, String clave) {
+        String valor = entorno.get(clave);
+        if (valor == null || valor.isBlank())
+            throw new IllegalStateException("Configura " + clave + " en .env o en el entorno");
+        return valor;
+    }
+
+    // El servicio puede agrupar varios DAO; no se permite iniciar otra transaccion encima.
+    public synchronized void iniciarTransaccion() {
+        try {
+            Connection c = getConnection();
+            if (transaccionActiva || !c.getAutoCommit())
+                throw new IllegalStateException("Ya existe una transaccion activa");
+            c.setAutoCommit(false);
+            transaccionActiva = true;
+        } catch (SQLException e) {
+            throw new AccesoDatosException("No se pudo iniciar la transaccion", e);
+        }
+    }
+
+    // Exige la conexion original; confirmar nunca abre una conexion nueva por accidente.
+    private Connection conexionDeTransaccion() throws SQLException {
+        if (!transaccionActiva) throw new IllegalStateException("No hay transaccion activa");
+        if (connection == null || connection.isClosed())
+            throw new SQLException("La conexion de la transaccion no esta disponible");
+        return connection;
+    }
+
+    // Confirma solo la transaccion explicita iniciada mediante este administrador.
+    public synchronized void confirmar() {
+        try {
+            Connection c = conexionDeTransaccion();
+            c.commit();
+            c.setAutoCommit(true);
+            transaccionActiva = false;
+        } catch (SQLException e) {
+            throw new AccesoDatosException("No se pudo confirmar la transaccion", e);
+        }
+    }
+
+    // Revierte antes de restaurar autocommit para no confirmar cambios pendientes.
+    public synchronized void revertir() {
+        try {
+            Connection c = conexionDeTransaccion();
+            c.rollback();
+            c.setAutoCommit(true);
+            transaccionActiva = false;
+        } catch (SQLException e) {
+            throw new AccesoDatosException("No se pudo revertir la transaccion", e);
+        }
+    }
+
+    // No abre conexiones al cerrar y descarta cualquier trabajo aun sin confirmar.
+    public synchronized void desconectar() {
         try {
             if (connection != null && !connection.isClosed()) {
+                if (!connection.getAutoCommit()) connection.rollback();
                 connection.close();
-                System.out.println("Conexión cerrada correctamente.");
             }
-        }catch (SQLException e){
-            System.err.println("Error al desconectar Mysql: "+e.getMessage());
+            connection = null;
+            transaccionActiva = false;
+        } catch (SQLException e) {
+            // Si el rollback falla, se intenta cerrar sin activar autocommit.
+            try {
+                if (connection != null) connection.close();
+            } catch (SQLException cierre) {
+                e.addSuppressed(cierre);
+            }
+            throw new AccesoDatosException("No se pudo cerrar correctamente la conexion", e);
         }
     }
 }
