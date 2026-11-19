@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+<<<<<<< HEAD
 public class Cajero extends Usuario {
     //Constructor
     public Cajero(int id, String nombre, String username, String passwordHash, boolean activo, LocalDateTime creadoEn) {
@@ -11,16 +12,43 @@ public class Cajero extends Usuario {
     }
  
     @Override
+=======
+
+/**
+ * Entidad del modelo: encapsula sus datos sin depender de vistas, servicios ni DAO.
+ */
+public class Cajero extends Usuario {
+
+    //Constructor
+    // Construye el objeto e inicializa sus atributos con las validaciones disponibles.
+    public Cajero(int id, String nombre, String username, String passwordHash, boolean activo, LocalDateTime creadoEn) {
+        super(id, nombre, username, passwordHash, Rol.CAJERO, activo, creadoEn);
+    }
+
+    @Override
+    // Implementa por polimorfismo las capacidades del perfil indicado en la guia.
+>>>>>>> c6b38029e9d5f9f3c350cb56d301388f5b5859f1
     public List<Permiso> obtenerPermisos() {
         //Aquí llamo unicamente el permiso REGISTRA_VENTA
         return Arrays.asList(Permiso.REGISTRAR_VENTA);
     }
 
     @Override
+<<<<<<< HEAD
     public List<String> mostrarMenu() {
         return Arrays.asList(
             "Registrar venta", 
             "Ver semaforo del día"
         );
     }    
+=======
+    // Devuelve los textos exigidos por la guia; la vista construye las ventanas.
+    public List<String> mostrarMenu() {
+        return Arrays.asList(
+                "Registrar venta",
+                "Ver semaforo del día"
+        );
+    }
+
+>>>>>>> c6b38029e9d5f9f3c350cb56d301388f5b5859f1
 }

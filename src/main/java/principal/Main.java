@@ -1,6 +1,7 @@
 package principal;
 
 import javax.swing.SwingUtilities;
+<<<<<<< HEAD
 import javax.swing.UIManager;
 
 public class Main {
@@ -23,3 +24,12 @@ public class Main {
         });
     }
 }
+=======
+
+public class Main {
+    public static void main(String[] args) {
+        // Todos los componentes Swing se construyen en el hilo de la interfaz.
+        SwingUtilities.invokeLater(() -> new AplicacionDesktop().iniciar());
+    }
+}
+>>>>>>> c6b38029e9d5f9f3c350cb56d301388f5b5859f1
